@@ -3,6 +3,7 @@ import Button from "../../Components/Button";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { JoinContainer } from "../../styles/container";
+import { useProgress } from "../../context/ProgressContext.jsx";
 
 const Wrapper = styled.div`
     height: 70%;
@@ -56,9 +57,11 @@ const JoinBtn = styled.button`
 const JoinCategory = () => {
     const [activeBtn, setActiveBtn] = useState(null);
     const navigate = useNavigate();
+    const { setProgress } = useProgress();
 
     const handleClick = (id) => {
         setActiveBtn(id);
+        setProgress(50);
     };
 
     const handleNext = () => {

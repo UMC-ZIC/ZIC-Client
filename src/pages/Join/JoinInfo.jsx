@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Button from "../../Components/Button";
 import { JoinContainer } from "../../styles/container";
@@ -6,6 +6,7 @@ import styled from "styled-components";
 import { IoIosSearch } from "react-icons/io";
 import { regions, instruments } from "../../assets/category";
 import ScrollContainer from "react-indiana-drag-scroll";
+import { useProgress } from "../../context/ProgressContext.jsx";
 
 const InputContainer = styled.div`
     width: 100%;
@@ -127,6 +128,7 @@ const JoinInfo = () => {
     const [number, setNumber] = useState("");
     const [address, setAddress] = useState("");
     const [selectedInstruments, setSelectedInstruments] = useState([]);
+    const { setProgress } = useProgress();
 
     const handleNext = () => {
         console.log(region);
@@ -154,7 +156,9 @@ const JoinInfo = () => {
                             type="text"
                             placeholder="도로명, 지번, 건물명 검색"
                             value={region}
-                            onChange={(e) => setRegion(e.target.value)}
+                            onChange={(e) => {
+                                setRegion(e.target.value);
+                            }}
                         />
                         <IoIosSearch
                             onClick={() => setRegionToggle(!regionToggle)}
