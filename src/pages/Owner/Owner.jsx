@@ -11,7 +11,7 @@ const Container = styled.div.attrs((props) => ({
     ismobile: undefined,
 }))`
     padding: 5%;
-    height: 100%
+    height: 100%;
     width: 100%;
     display: grid;
     grid-template-rows: ${(props) => (props.ismobile ? "45%" : "35%")} 1fr;
@@ -68,7 +68,24 @@ const Owner = (reservations) => {
 
             <ReservationWrapper>
                 <ReservationLabel>예약 내역</ReservationLabel>
-                
+                {reservations.result.resultList.map((el) => (
+                    <ReservationCard
+                        img={
+                            el.reservationResult.practiceRoomDetail
+                                .practiceRoomDetailImage
+                        }
+                        roomName={
+                            el.reservationResult.practiceRoom.PracticeRoomName
+                        }
+                        detailName={
+                            el.reservationResult.practiceRoomDetail
+                                .practiceRoomDetailName
+                        }
+                        date={el.reservationResult.date}
+                        startTime={el.reservationResult.startTime}
+                        endTime={el.reservationResult.endTime}
+                    />
+                ))}
             </ReservationWrapper>
         </Container>
     );
