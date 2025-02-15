@@ -11,7 +11,7 @@ import axios from "axios";
     클릭한 날짜에 해당하는 예약내역 하단에 뜨도록*/
 
 const ReactCalendar = () => {
-    const [selectedDate, setSelectedDate] = useState(new Date("")); //하단에 예약 내역을 표시할 때 사용
+    const [selectedDate, setSelectedDate] = useState(new Date()); //하단에 예약 내역을 표시할 때 사용
     const [dayList, setDayList] = useState([]);
     const [reservations, setReservations] = useState([]);
     const page = 1; // 페이지 번호 (예시 값)
@@ -69,11 +69,13 @@ const ReactCalendar = () => {
             console.log("API 응답: ", response);
             
              if (!response.data.isSuccess) {
-                 console.error("API 오류: ", response.data);
+                 console.error("API 오류: ", response.data.result);
             }
     
-            setReservations(response.data.resultList);
-            console.log(reservations);
+            setReservations(response.data.result);
+            console.log("RES데이터: " + reservations);
+            console.log("RES 데이터:", JSON.stringify(reservations, null, 1)); //(객체이름, 속성, 줄간격)
+
         } catch (error) {
             console.error("예약 내역 불러오기 실패! : ", error);
         }
