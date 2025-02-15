@@ -6,9 +6,11 @@ import moment from "moment";
 import { useState, useEffect } from "react";
 import { checkMobile } from "../../utils/checkMobile";
 
-const Container = styled.div`
+const Container = styled.div.attrs((props) => ({
+    ismobile: undefined,
+}))`
     padding: 5%;
-    height: 100%;
+    height: 100%
     width: 100%;
     display: grid;
     grid-template-rows: ${(props) => (props.ismobile ? "45%" : "35%")} 1fr;
@@ -21,7 +23,7 @@ const CalendarWrapper = styled.div``;
 const ReservationWrapper = styled.div`
     width: 100%;
     height: 100%;
-
+    
     overflow-y: auto; /* 세로 스크롤 활성화 */
     scrollbar-width: none; /* Firefox에서 스크롤바 숨김 */
 
@@ -51,10 +53,11 @@ const Owner = () => {
     useEffect(() => {
         console.log(selectedDate);
     }, [selectedDate]);
+    const isMobile = checkMobile();
 
     // API로 대여자 예약 내역 조회 구현
     return (
-        <Container ismobile={checkMobile()}>
+        <Container ismobile={isMobile}>
             <CalendarWrapper>
                 <CalendarComponent onDateSelect={handleDateSelect} />
             </CalendarWrapper>
