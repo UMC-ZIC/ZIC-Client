@@ -72,7 +72,8 @@ const ReactCalendar = () => {
                  console.error("API 오류: ", response.data);
             }
     
-            setReservations(response.data);
+            setReservations(response.data.resultList);
+            console.log(reservations);
         } catch (error) {
             console.error("예약 내역 불러오기 실패! : ", error);
         }
@@ -83,6 +84,7 @@ const ReactCalendar = () => {
             <CalendarComponent 
             showDate={true} 
             onDateSelect={handleDateSelect} 
+            reservations={reservations}
             value={selectedDate}
             dayList={dayList} // API에서 가져온 날짜 리스트 전달
             />
