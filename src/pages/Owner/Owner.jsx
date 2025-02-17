@@ -4,6 +4,7 @@ import ReservationCard from "../../Components/ReservationCard";
 import moment from "moment";
 import { useState, useEffect } from "react";
 import { checkMobile } from "../../utils/checkMobile";
+import ReactCalendar from "../../Components/Calendar";
 
 const Container = styled.div.attrs((props) => ({
     ismobile: undefined,
@@ -48,10 +49,11 @@ const Owner = ({ reservations = { result: { resultList: [] } } }) => {
     const handleDateSelect = (date, reservationData) => {
         const formattedDate = moment(date).format("YYYY-MM-DD"); // 날짜 포맷
         setSelectedDate(formattedDate); // 상태에 저장
+        console.log("selectedDate 안녕 : " + selectedDate);
     };
 
     useEffect(() => {
-        console.log(selectedDate);
+        // console.log(selectedDate);
         console.log(reservations);
     }, [selectedDate, reservations]);
 
@@ -63,7 +65,7 @@ const Owner = ({ reservations = { result: { resultList: [] } } }) => {
     return (
         <Container ismobile={isMobile}>
             <CalendarWrapper>
-                <CalendarComponent onDateSelect={handleDateSelect} />
+                <ReactCalendar/>
             </CalendarWrapper>
 
             <ReservationWrapper>
