@@ -4,29 +4,47 @@ import "./Calendar.css";
 import moment from "moment";
 import axios from "axios";
 
+// reactcalendar가 달이 바뀔 때마다 daylist업데이트 
+// 초기 상태
+// activeMonth = "2025-01-01"
+// 사용자가 다음 달 버튼 클릭 (1월 -> 2월)
+// onActiveStartDateChange 발생 -> getActiveMonth(activeStartDate) 호출
+// activeStartDate = 2025-02-01
+// moment(activeStartDate).format('YYYY-MM-DD') -> "2025-02-01"
+// 새로운 activeMonth 저장
+// 기존 activeMonth = "2025-01-01"
+// 새로운 activeMonth = "2025-02-01"이므로 상태 업데이트
+// setActiveMonth("2025-02-01")
+// API 호출
+// useEffect 실행 -> fetchReservedDates() 호출
+// "2025-02-01" 예약된 날짜 API 요청
+// UI 업데이트됨
+
+
+//handleDateSelect api owner랑 연결
+
 const ReactCalendar = () => {
     const [selectedDate, setSelectedDate] = useState(new Date()); //선택한 날짜 (하단에 예약 내역을 표시할 때 사용)
-    const [reservations, setReservations] = useState([]); // 선택한 날짜의 예약 내역
-    const [activeMonth, setActiveMonth] = useState(moment(new Date()).format('YYYY-MM-DD')); // //현재 날짜를 'YYYY-MM' 형태로 변환
-    const [dayList, setDayList] = useState([]); // 해당 달의 예약된 날짜 리스트
+    const [reservations, setReservations] = useState([]); //선택한 날짜의 예약 내역
+    const [activeMonth, setActiveMonth] = useState(moment().format('YYYY-MM-DD')); //현재 보이는 달 저장
+    const [dayList, setDayList] = useState([]); //해당 달의 예약된 날짜 리스트
 
     const getActiveMonth = (activeStartDate) => {
-        const newActiveMonth = moment(activeStartDate).format('YYYY-MM');
-        setActiveMonth(newActiveMonth); // 현재 보이는 달 업데이트
+        const newActiveMonth = moment(activeStartDate).format('YYYY-MM-DD');
+        if (newActiveMonth !== activeMonth) { 
+            setActiveMonth(newActiveMonth);
+        }
     }; //받아온 인자(activeStartDate)에 따라 현재 보여지는 달(activeMonth)의 State를 변경하는 함수
 
-    //이거는 해당 달에 대한 전체적인 데이터를 조회를 한 후
-    //해당 달에 예약된 날짜가 있다면 점으로 예약내역이 있다라는걸 알려줘야한다
-
     useEffect(() => {
-        console.log("데이리스트: ", dayList)
         const fetchReservedDates = async () => {
             try {
+                console.log(`📌 API 요청: ${activeMonth}`); // ✅ 현재 activeMonth가 변경될 때마다 로그 확인
                 const response = await axios.get(
                     `http://43.200.3.214:8080/api/reservation/owner/date?date=${activeMonth}`, {
                         
                         headers: {
-                            Authorization: `eyJ0eXBlIjoiYWNjZXNzVG9rZW4iLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjIsInVzZXJUeXBlIjoiT1dORVIiLCJ1c2VyTmFtZSI6Ik93bmVyVGVzdCIsImlhdCI6MTczOTc2ODIyNCwiZXhwIjoxNzM5ODU0NjI0fQ.mMmzEGCD4GlpIoX0-lgdh5PqT6HfHO7oSFO_xNsxlUw`
+                            Authorization: `eyJ0eXBlIjoiYWNjZXNzVG9rZW4iLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjIsInVzZXJUeXBlIjoiT1dORVIiLCJ1c2VyTmFtZSI6Ik93bmVyVGVzdCIsImlhdCI6MTczOTgwMjM5OSwiZXhwIjoxNzM5ODg4Nzk5fQ.sqCnEznfuCYF7IQWisPSbBT7kRAzKvlsri43zSrzF8Q`
                         }
                 });
 
@@ -40,13 +58,14 @@ const ReactCalendar = () => {
                 // 예약된 날짜 리스트 추출
                 const reservedDates = response.data.result?.reservationDateList?.map(item => item) || [];
                 setDayList(reservedDates);
-                console.log("API 응답 데이터 :", JSON.stringify(reservedDates, null, 1));
+                console.log("📌 업데이트된 해당 달 예약된 날짜:", JSON.stringify(reservedDates, null, 1));
 
             } catch (error) {
                 console.error("예약내역 불러오기 실패", error)
             }
         };
 
+        
         fetchReservedDates();
     }, [activeMonth]); //activeMonth가 변경될 때마다 실행
 
@@ -61,7 +80,7 @@ const ReactCalendar = () => {
                 `http://43.200.3.214:8080/api/reservation/owner?date=${activeDate}&page=1`,
                {
                     headers: {
-                        Authorization: `eyJ0eXBlIjoiYWNjZXNzVG9rZW4iLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjIsInVzZXJUeXBlIjoiT1dORVIiLCJ1c2VyTmFtZSI6Ik93bmVyVGVzdCIsImlhdCI6MTczOTcyODcxNCwiZXhwIjoxNzM5ODE1MTE0fQ.CV0CiqvkaccpMmp5IdlLP8A_WhxzmJPn9xBycOA4j0o`
+                        Authorization: `eyJ0eXBlIjoiYWNjZXNzVG9rZW4iLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjIsInVzZXJUeXBlIjoiT1dORVIiLCJ1c2VyTmFtZSI6Ik93bmVyVGVzdCIsImlhdCI6MTczOTgwMjM5OSwiZXhwIjoxNzM5ODg4Nzk5fQ.sqCnEznfuCYF7IQWisPSbBT7kRAzKvlsri43zSrzF8Q`
                     }
                 }
             );
@@ -89,29 +108,14 @@ const ReactCalendar = () => {
             reservations={reservations}
             value={selectedDate}
             dayList={dayList} // API에서 가져온 날짜 리스트 전달
-            onActiveStartDateChange={({ activeStartDate }) => getActiveMonth(activeStartDate)}
-
-
-            // tileContent={({ date, view }) => {
-            //     // 달력에서 날짜에 점 표시 (예약된 날짜 표시)
-            //     // api로 특정 달 전체 예약 내역 날짜 데이터 받아온다
-            //     // 데이터를 날짜 리스트에 넣는다
-            //     // dayList와 캘린더의 날짜를 비교해서 같으면 블루닷
-            //     if (view === "month") {
-            //         const reservedDates = moment(date).format("YYYY-MM-DD");
-            //         return dayList.includes(reservedDates) ? <div className="blue-dot"/> : null;
-            //     }
-            // }}
+            onActiveStartDateChange={({ activeStartDate }) =>
+                getActiveMonth(activeStartDate)}
             />
         </div>
     );
 };
 
-const CalendarComponent = ({ showDate, onDateSelect, value, dayList,reservations }) => {
-
-    useEffect(() => {
-        console.log("📌 업데이트된 reservations:", reservations);
-    }, [reservations]);
+const CalendarComponent = ({ showDate, onDateSelect, value, dayList, onActiveStartDateChange }) => {
 
     const tileClassName = ({ date, view }) => {
         // view가 "month"일 때만 적용
@@ -126,17 +130,14 @@ const CalendarComponent = ({ showDate, onDateSelect, value, dayList,reservations
 
     const blueDot = ({date, view}) => {
         if (view === "month") {
-            // const reservedDatesArray = Object.values(reservedDates).flat(); 
 
-            const formattedDate = moment(date).format("YYYY-MM-DD"); // ✅ 날짜를 "YYYY-MM-DD" 형식으로 변환
-            console.log("📌 현재 검사 중인 날짜:", formattedDate);
+            const formattedDate = moment(date).format("YYYY-MM-DD");
             console.log("dayList : " + dayList);
             if (dayList.includes(formattedDate)) {
-                // return "blue-dot";
-                return "blue-dot"; // ✅ 변환된 날짜를 표시
+                return <div className="blue-dot" />;
             }
         }
-        return "";
+        return null;
     }
 
     return (
@@ -165,7 +166,8 @@ const CalendarComponent = ({ showDate, onDateSelect, value, dayList,reservations
                 />
             }
             tileClassName={tileClassName}
-            tileContent={blueDot}
+            tileContent={({ date, view }) => blueDot({ date, view })}
+            onActiveStartDateChange={onActiveStartDateChange}
         />
     );
 };
