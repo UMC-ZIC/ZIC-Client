@@ -1,8 +1,6 @@
 import CalendarComponent from "../../Components/Calendar";
-import ReactCalendar from "../../Components/Calendar";
 import styled from "styled-components";
 import ReservationCard from "../../Components/ReservationCard";
-//import { userReservation } from "../../assets/userReservation";
 import moment from "moment";
 import { useState, useEffect } from "react";
 import { checkMobile } from "../../utils/checkMobile";
@@ -40,7 +38,7 @@ const ReservationLabel = styled.p`
     margin-bottom: 3%;
 `;
 
-const Owner = (reservations) => {
+const Owner = ({ reservations = { result: { resultList: [] } } }) => {
     const [selectedDate, setSelectedDate] = useState(
         moment().format("YYYY-MM-DD")
     );
@@ -50,7 +48,6 @@ const Owner = (reservations) => {
     const handleDateSelect = (date, reservationData) => {
         const formattedDate = moment(date).format("YYYY-MM-DD"); // 날짜 포맷
         setSelectedDate(formattedDate); // 상태에 저장
-        reservations(reservationData || []);
     };
 
     useEffect(() => {
@@ -58,18 +55,22 @@ const Owner = (reservations) => {
         console.log(reservations);
     }, [selectedDate, reservations]);
 
+
+    // 예약 내역이 존재하는지 확인하고, 그에 맞게 렌더링
+    const resultList = reservations.result?.resultList || [];
+
     // API로 대여자 예약 내역 조회 구현
     return (
         <Container ismobile={isMobile}>
             <CalendarWrapper>
                 <CalendarComponent onDateSelect={handleDateSelect} />
-                <ReactCalendar/>
             </CalendarWrapper>
 
             <ReservationWrapper>
                 <ReservationLabel>예약 내역</ReservationLabel>
                 {reservations.result.resultList.map((el) => (
                     <ReservationCard
+                        key={el.reservationResult.id} // 고유 키 추가
                         img={
                             el.reservationResult.practiceRoomDetail
                                 .practiceRoomDetailImage
