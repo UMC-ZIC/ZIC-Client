@@ -4,13 +4,10 @@ import "./Calendar.css";
 import moment from "moment";
 import axios from "axios";
 
-/* 해당 달에 어떤 날에만 예약이 있는지 date만 리스트로 받아오면 될 것 같음
-    result:date ["2025-02-01","2025-02-13"] 이런식으로 */
-
 const ReactCalendar = () => {
     const [selectedDate, setSelectedDate] = useState(new Date()); //선택한 날짜 (하단에 예약 내역을 표시할 때 사용)
     const [reservations, setReservations] = useState([]); // 선택한 날짜의 예약 내역
-    const [activeMonth, setActiveMonth] = useState(moment(new Date()).format('YYYY-MM')); // //현재 날짜를 'YYYY-MM' 형태로 변환
+    const [activeMonth, setActiveMonth] = useState(moment(new Date()).format('YYYY-MM-DD')); // //현재 날짜를 'YYYY-MM' 형태로 변환
     const [dayList, setDayList] = useState([]); // 해당 달의 예약된 날짜 리스트
 
     const getActiveMonth = (activeStartDate) => {
@@ -22,6 +19,7 @@ const ReactCalendar = () => {
     //해당 달에 예약된 날짜가 있다면 점으로 예약내역이 있다라는걸 알려줘야한다
 
     useEffect(() => {
+        console.log("데이리스트: ", dayList)
         const fetchReservedDates = async () => {
             try {
                 const response = await axios.get(
@@ -40,10 +38,9 @@ const ReactCalendar = () => {
                 }
 
                 // 예약된 날짜 리스트 추출
-                const reservedDates = response.data.result?.resultList?.map(item => item.date) || [];
+                const reservedDates = response.data.result?.reservationDateList?.map(item => item) || [];
                 setDayList(reservedDates);
-
-                console.log("예약된 날짜 리스트: ", reservedDates);
+                console.log("API 응답 데이터 :", JSON.stringify(reservedDates, null, 1));
 
             } catch (error) {
                 console.error("예약내역 불러오기 실패", error)
@@ -93,13 +90,16 @@ const ReactCalendar = () => {
             value={selectedDate}
             dayList={dayList} // API에서 가져온 날짜 리스트 전달
             onActiveStartDateChange={({ activeStartDate }) => getActiveMonth(activeStartDate)}
-            tileContent={({ date, view }) => {
-                // 달력에서 날짜에 점 표시 (예약된 날짜 표시)
-                if (view === "month") {
-                    const formattedDate = moment(date).format("YYYY-MM-DD");
-                    return dayList.includes(formattedDate) ? <div className="blue-dot"></div> : null;
-                }
-            }}
+            // tileContent={({ date, view }) => {
+            //     // 달력에서 날짜에 점 표시 (예약된 날짜 표시)
+            //     // api로 특정 달 전체 예약 내역 날짜 데이터 받아온다
+            //     // 데이터를 날짜 리스트에 넣는다
+            //     // dayList와 캘린더의 날짜를 비교해서 같으면 블루닷
+            //     if (view === "month") {
+            //         const reservedDates = moment(date).format("YYYY-MM-DD");
+            //         return dayList.includes(reservedDates) ? <div className="blue-dot"/> : null;
+            //     }
+            // }}
             />
         </div>
     );
@@ -117,17 +117,15 @@ const CalendarComponent = ({ showDate, onDateSelect, value, dayList }) => {
         return "";
     };
 
-    // // dayList에 포함된 날짜에만 파란점 추가
-    // const addDotToTile = ({ date, view }) => {
-    //     if (view === "month") {
-    //         const formattedDate = moment(date).format("YYYY-MM-DD");
-
-    //         if (dayList.includes(formattedDate)) {
-    //             return <span className="blue-dot"></span>;
-    //         }
-    //     }
-    //     return null;
-    // };
+    const blueDot = ({date, view, reservedDates}) => {
+        if (view === "month") {
+            const reservedDatesArray = Object.values(reservedDates).flat(); 
+            if (reservedDatesArray.includes(date)) {
+                return "blue-dot";
+            }
+        }
+        return "";
+    }
 
     return (
         <Calendar
@@ -155,7 +153,7 @@ const CalendarComponent = ({ showDate, onDateSelect, value, dayList }) => {
                 />
             }
             tileClassName={tileClassName}
-            // tileContent={addDotToTile}
+            tileContent={blueDot}
         />
     );
 };
