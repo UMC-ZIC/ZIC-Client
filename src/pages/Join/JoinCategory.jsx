@@ -55,7 +55,7 @@ const JoinBtn = styled.button`
 `;
 
 const JoinCategory = () => {
-    const [role, setRole] = useState("owner");
+    const [role, setRole] = useState( "owner" );
     const [activeBtn, setActiveBtn] = useState(null);
     const navigate = useNavigate();
 
