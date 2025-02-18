@@ -3,6 +3,7 @@ import Button from "../../Components/Button";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { JoinContainer } from "../../styles/container";
+import Calendar from "../../Components/Calendar"
 
 const Wrapper = styled.div`
     height: 70%;
@@ -54,11 +55,13 @@ const JoinBtn = styled.button`
 `;
 
 const JoinCategory = () => {
+    const [role, setRole] = useState("owner");
     const [activeBtn, setActiveBtn] = useState(null);
     const navigate = useNavigate();
 
     const handleClick = (id) => {
         setActiveBtn(id);
+        setRole(id);
     };
 
     const handleNext = () => {
@@ -87,6 +90,7 @@ const JoinCategory = () => {
                     ))}
                 </BtnWrapper>
             </Wrapper>
+            <Calendar role={role} />
             <div />
             <Button text={"다음"} onClick={handleNext} height={"100%"} />
         </JoinContainer>
