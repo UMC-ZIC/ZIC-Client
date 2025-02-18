@@ -40,7 +40,7 @@ const CalendarComponent = ({ role }) => {
     useEffect(() => {
         const FetchReservedDates = async () => {
             try {
-                //(role에 따라 api url 변경
+                //역할 (role)에 따라 api url 변경
                 const apiUrl =
                 role === "owner"
                     ? `${import.meta.env.VITE_API_URL}/api/reservation/owner/date`
