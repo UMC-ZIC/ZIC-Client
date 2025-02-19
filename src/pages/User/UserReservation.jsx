@@ -50,8 +50,7 @@ const UserReservation = () => {
     const handleNext = () => {
         navigate("/");
     };
-    //import.meta.env.VITE_EC2_URL
-    //import.meta.env.VITE_USER_JWT
+
     // 예약 취소 api 호출 함수
     const axiosReservationCancle = (id, tid, amount, tax_free, vat) => {
         const body = {
@@ -66,7 +65,7 @@ const UserReservation = () => {
             url: `${import.meta.env.VITE_API_URL}/api/reservation/payment/kakao/cancel`,
             method: "PATCH",
             headers: {
-                Authorization: `eyJ0eXBlIjoiYWNjZXNzVG9rZW4iLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEsInVzZXJUeXBlIjoiVVNFUiIsInVzZXJOYW1lIjoiVXNlclRlc3QiLCJpYXQiOjE3Mzk5NDkwNTUsImV4cCI6MTc0MDAzNTQ1NX0.ZS-EXq3_jC66yGs324eZcqGsebfgREaNsraS_D1FJcY`,
+                Authorization: `eyJ0eXBlIjoiYWNjZXNzVG9rZW4iLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEsInVzZXJUeXBlIjoiVVNFUiIsInVzZXJOYW1lIjoiVXNlclRlc3QiLCJpYXQiOjE3Mzk5ODUyMDIsImV4cCI6MTc0MDA3MTYwMn0.q0qr_So9GMKjWtu5PLHq4G7K_X-yAAq1knI4Th-l-Qg`,
                 "Content-Type": "application/json",
             },
             data: body,
@@ -76,21 +75,8 @@ const UserReservation = () => {
             .then((res) => {
                 console.log("예약 취소 성공", res.data);
             })
-            // .catch((err) => console.error("예약 취소 실패", err));
-            .catch((err) => {
-                if (err.response) {
-                    console.error("에러 응답 데이터:", err.response.data);
-                    console.error("에러 상태 코드:", err.response.status);
-                    console.error("에러 헤더:", err.response.headers);
-                } else if (err.request) {
-                    console.error("요청이 전송되었으나 응답 없음:", err.request);
-                } else {
-                    console.error("요청 설정 중 에러 발생:", err.message);
-                }
-            });
+            .catch((err) => console.error("예약 취소 실패", err.response.data));
     }
-    
-    
 
     const handleDateSelect = async (date) => {
             console.log("handleDateSelect 실행됨! 선택된 날짜:", date);
@@ -104,7 +90,7 @@ const UserReservation = () => {
                     `${import.meta.env.VITE_API_URL}/api/reservation/user?date=${selectedDate}&page=1`,
                    {
                         headers: {
-                            Authorization: `eyJ0eXBlIjoiYWNjZXNzVG9rZW4iLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEsInVzZXJUeXBlIjoiVVNFUiIsInVzZXJOYW1lIjoiVXNlclRlc3QiLCJpYXQiOjE3Mzk4OTI1MzYsImV4cCI6MTczOTk3ODkzNn0.KM87UVu-3GVt95AzUZH8YU4SCkpF0_k1ntPrvI3laA0`
+                            Authorization: `eyJ0eXBlIjoiYWNjZXNzVG9rZW4iLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEsInVzZXJUeXBlIjoiVVNFUiIsInVzZXJOYW1lIjoiVXNlclRlc3QiLCJpYXQiOjE3Mzk5ODUyMDIsImV4cCI6MTc0MDA3MTYwMn0.q0qr_So9GMKjWtu5PLHq4G7K_X-yAAq1knI4Th-l-Qg`
                         }
                     }
                 );
@@ -152,7 +138,7 @@ const UserReservation = () => {
                                 startTime={el.reservationResult.startTime ?? "시작 시간 없음"}
                                 endTime={el.reservationResult.endTime ?? "종료 시간 없음"}
                                 onClick={() => {
-                                    if (reservationStatus === "결제 완료") {
+                                    if (reservationStatus === SUCCESS) {
                                         axiosReservationCancle(
                                             el.reservationResult.id,
                                             el.reservationDetailResult.tid,
