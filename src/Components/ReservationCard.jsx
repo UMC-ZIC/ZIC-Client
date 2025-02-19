@@ -8,6 +8,7 @@ const ReservationContainer = styled.div`
     display: flex;
     gap: 5%;
     box-sizing: border-box;
+    cursor: pointer;
 `;
 
 const ReservationImg = styled.div`
@@ -66,6 +67,7 @@ const ReservationCard = ({
     date,
     startTime,
     endTime,
+    onClick,
 }) => {
     const dateFormat = (time) => {
         return time.replace(/-/g, ". ");
@@ -76,7 +78,7 @@ const ReservationCard = ({
     };
 
     return (
-        <ReservationContainer>
+        <ReservationContainer onClick={onClick}>
             <ReservationImg bgphoto={img} />
             <ReservationInfo>
                 <TitleWrapper>
