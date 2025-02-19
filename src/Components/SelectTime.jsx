@@ -3,9 +3,9 @@ import Button from "./Button";
 import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 
-const Container = styled.div`
+const TimeContainer = styled.div`
     height: 50%;
-    width: 100vw;
+    width: 100%;
     max-width: 500px;
     position: absolute;
     background-color: #fff;
@@ -107,7 +107,7 @@ const SelectTime = ({ text, time, notMin, setTime, onCancel }) => {
     };
 
     return (
-        <Container>
+        <TimeContainer>
             <Title>
                 <p>{text}</p>
             </Title>
@@ -213,7 +213,7 @@ const SelectTime = ({ text, time, notMin, setTime, onCancel }) => {
                 </SwiperWrapper>
             </SpinnerContainer>
             <Button text={"완료"} height={"100%"} onClick={handleSelect} />
-        </Container>
+        </TimeContainer>
     );
 };
 
