@@ -4,7 +4,7 @@ import "./Calendar.css";
 import moment from "moment";
 import axios from "axios";
 
-const CalendarComponent = ({ role }) => {
+const CalendarComponent = ({ role, onDateSelect }) => {
     const [activeMonth, setActiveMonth] = useState(moment().format('YYYY-MM-DD')); //현재 보이는 달 저장
     const [dayList, setDayList] = useState([]); //해당 달의 예약된 날짜 리스트
 
@@ -37,6 +37,17 @@ const CalendarComponent = ({ role }) => {
         return null;
     }
 
+    const handleDateClick = (date) => {
+        const activeDate = moment(date).format("YYYY-MM-DD");
+        console.log("선택된 날짜:", activeDate);
+
+        if (onDateSelect) {
+            onDateSelect(activeDate);
+        } else {
+            console.error("onDateSelect가 정의되지 않음");
+        }
+    };
+
     useEffect(() => {
         const FetchReservedDates = async () => {
             try {
@@ -48,7 +59,7 @@ const CalendarComponent = ({ role }) => {
 
                 const response = await axios.get(`${apiUrl}?date=${activeMonth}`, {
                         headers: {
-                            Authorization: `eyJ0eXBlIjoiYWNjZXNzVG9rZW4iLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEsInVzZXJUeXBlIjoiVVNFUiIsInVzZXJOYW1lIjoiVXNlclRlc3QiLCJpYXQiOjE3Mzk4NTU5NjEsImV4cCI6MTczOTk0MjM2MX0.rvY03ScJzCg-LzRRPmLGP38sL_3mzRS7Ds4pmYEKu84`
+                            Authorization: `eyJ0eXBlIjoiYWNjZXNzVG9rZW4iLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEsInVzZXJUeXBlIjoiVVNFUiIsInVzZXJOYW1lIjoiVXNlclRlc3QiLCJpYXQiOjE3Mzk5ODUyMDIsImV4cCI6MTc0MDA3MTYwMn0.q0qr_So9GMKjWtu5PLHq4G7K_X-yAAq1knI4Th-l-Qg`
                         }
                 });
 
@@ -98,6 +109,7 @@ const CalendarComponent = ({ role }) => {
             tileContent={({ date, view }) => blueDot({ date, view })}
             onActiveStartDateChange={({ activeStartDate }) =>
                 getActiveMonth(activeStartDate)}
+            onClickDay={handleDateClick} 
         />
     );
 };
