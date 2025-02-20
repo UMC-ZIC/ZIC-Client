@@ -26,10 +26,12 @@ const JoinRoutes = () => {
     return (
         <Routes>
             <Route element={<JoinHeader />}>
-                {/* 회원 가입 대여자 || 이용자 고르는 페이지 */}
-                <Route path="/category" element={<JoinCategory />} />
-                {/* 이용자 & 대여자 회원 가입 정보 페이지 */}
-                <Route path="/:role/info" element={<JoinInfo />} />
+                <Route element={<OnlyPending />}>
+                    {/* 회원 가입 대여자 || 이용자 고르는 페이지 */}
+                    <Route path="/category" element={<JoinCategory />} />
+                    {/* 이용자 & 대여자 회원 가입 정보 페이지 */}
+                    <Route path="/:role/info" element={<JoinInfo />} />
+                </Route>
             </Route>
             {/* 회원가입 성공 페이지 */}
             <Route path="/:role/success" element={<JoinSuccess />} />

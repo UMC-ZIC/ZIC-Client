@@ -3,7 +3,7 @@ import Button from "../../Components/Button";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { JoinContainer } from "../../styles/container";
-import Calendar from "../../Components/Calendar"
+import { checkMobile } from "../../utils/checkMobile";
 
 const Wrapper = styled.div`
     height: 100%;
@@ -57,18 +57,19 @@ const JoinBtn = styled.button.withConfig({
 `;
 
 const JoinCategory = () => {
-    const [role, setRole] = useState("owner");
     const [activeBtn, setActiveBtn] = useState(null);
     const navigate = useNavigate();
 
     const handleClick = (id) => {
         setActiveBtn(id);
-        setRole(id);
     };
 
     const handleNext = () => {
         if (activeBtn == null) {
             return alert("가입 목적을 선택해주세요.");
+        }
+        if (checkMobile() && activeBtn == "owner") {
+            return alert("휴대폰으로는 대여자 회원가입을 하실 수 없습니다.");
         }
         navigate(`/join/${activeBtn}/info`);
     };
@@ -92,7 +93,6 @@ const JoinCategory = () => {
                     ))}
                 </BtnWrapper>
             </Wrapper>
-            <Calendar role={role} />
             <div />
             <Button text={"다음"} onClick={handleNext} height={"100%"} />
         </JoinContainer>

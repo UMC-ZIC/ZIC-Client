@@ -96,7 +96,7 @@ const PracticeRoomCard = ({
 }) => {
     const [isFull, setIsFull] = useState(false);
     useEffect(() => {
-        if (availableCount == totalCount) setIsFull(true);
+        if (availableCount == 0) setIsFull(true);
     }, []);
 
     const handleNext = (e) => {

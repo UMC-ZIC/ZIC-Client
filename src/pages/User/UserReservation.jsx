@@ -8,9 +8,7 @@ import moment from "moment";
 import { checkMobile } from "../../utils/checkMobile";
 import axios from "axios";
 
-const Container = styled.div.attrs((props) => ({
-    ismobile: undefined,
-}))`
+const Container = styled.div`
     padding: 5%;
     height: 100%;
     width: 100%;
@@ -42,9 +40,10 @@ const ReservationLabel = styled.p`
 `;
 
 const UserReservation = () => {
-    const [selectedDate, setSelectedDate] = useState(moment().format("YYYY-MM-DD")); //선택한 날짜 (하단에 예약 내역을 표시할 때 사용)
+    const [selectedDate, setSelectedDate] = useState(
+        moment().format("YYYY-MM-DD")
+    ); //선택한 날짜 (하단에 예약 내역을 표시할 때 사용)
     const [reservations, setReservations] = useState({ resultList: [] }); //선택한 날짜의 예약 내역
-    const isMobile = checkMobile();
 
     const navigate = useNavigate();
     const handleNext = () => {
@@ -62,10 +61,12 @@ const UserReservation = () => {
         };
 
         const option = {
-            url: `${import.meta.env.VITE_API_URL}/api/reservation/payment/kakao/cancel`,
+            url: `${
+                import.meta.env.VITE_API_URL
+            }/api/reservation/payment/kakao/cancel`,
             method: "PATCH",
             headers: {
-                Authorization: `eyJ0eXBlIjoiYWNjZXNzVG9rZW4iLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEsInVzZXJUeXBlIjoiVVNFUiIsInVzZXJOYW1lIjoiVXNlclRlc3QiLCJpYXQiOjE3Mzk5ODUyMDIsImV4cCI6MTc0MDA3MTYwMn0.q0qr_So9GMKjWtu5PLHq4G7K_X-yAAq1knI4Th-l-Qg`,
+                Authorization: localStorage.getItem("accessToken"),
                 "Content-Type": "application/json",
             },
             data: body,
@@ -74,34 +75,36 @@ const UserReservation = () => {
         axios(option)
             .then((res) => {
                 alert("예약 취소 성공", res.data);
+                navigate(0);
             })
             .catch((err) => console.error("예약 취소 실패", err.response.data));
-    }
+    };
 
     const handleDateSelect = async (date) => {
-            console.log("handleDateSelect 실행됨! 선택된 날짜:", date);
-            setSelectedDate(moment(date).format("YYYY-MM-DD"));
+        console.log("handleDateSelect 실행됨! 선택된 날짜:", date);
+        setSelectedDate(moment(date).format("YYYY-MM-DD"));
     };
 
     useEffect(() => {
         const fetchReservations = async () => {
             try {
                 const response = await axios.get(
-                    `${import.meta.env.VITE_API_URL}/api/reservation/user?date=${selectedDate}&page=1`,
-                   {
+                    `${
+                        import.meta.env.VITE_API_URL
+                    }/api/reservation/user?date=${selectedDate}&page=1`,
+                    {
                         headers: {
-                            Authorization: `eyJ0eXBlIjoiYWNjZXNzVG9rZW4iLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEsInVzZXJUeXBlIjoiVVNFUiIsInVzZXJOYW1lIjoiVXNlclRlc3QiLCJpYXQiOjE3Mzk5ODUyMDIsImV4cCI6MTc0MDA3MTYwMn0.q0qr_So9GMKjWtu5PLHq4G7K_X-yAAq1knI4Th-l-Qg`
-                        }
+                            Authorization: localStorage.getItem("accessToken"),
+                        },
                     }
                 );
-    
-                 if (!response.data.isSuccess) {
+
+                if (!response.data.isSuccess) {
                     console.error("API 오류: ", response.data.result);
                     return;
                 }
-    
+
                 setReservations(response.data.result);
-    
             } catch (error) {
                 console.error("예약 내역 불러오기 실패! : ", error);
             }
@@ -110,54 +113,83 @@ const UserReservation = () => {
         fetchReservations();
     }, [selectedDate]);
 
-    useEffect(() => {
-        console.log("RES 데이터 업데이트됨:", JSON.stringify(reservations, null, 1));
-        reservations?.resultList?.forEach(el => {
-            console.log("예약 상태:", el.reservationResult.status);
-        });
-    }, [reservations]);
-
     return (
         <Container ismobile={checkMobile()}>
             <CalendarWrapper>
-                <CalendarComponent role="user" onDateSelect={handleDateSelect}/>
+                <CalendarComponent
+                    role="user"
+                    onDateSelect={handleDateSelect}
+                />
             </CalendarWrapper>
             <ReservationWrapper>
                 <ReservationLabel>예약 내역</ReservationLabel>
                 {reservations?.resultList?.length > 0 ? (
                     reservations.resultList.map((el) => {
                         const reservationStatus = el.reservationResult.status; // 예약 상태 가져오기
-                        const reservationEndTime = moment(`${el.reservationResult.date} ${el.reservationResult.endTime}`, "YYYY-MM-DD HH:mm"); // 예약 종료 시간
+                        const reservationEndTime = moment(
+                            `${el.reservationResult.date} ${el.reservationResult.endTime}`,
+                            "YYYY-MM-DD HH:mm"
+                        ); // 예약 종료 시간
                         const now = moment(); // 현재 시간
 
                         // 종료된 예약 여부 확인
-                        const isPastReservation = reservationEndTime.isBefore(now);
+                        const isPastReservation =
+                            reservationEndTime.isBefore(now);
 
                         return (
                             <ReservationCard
                                 key={el.reservationResult.id}
-                                img={el.reservationResult.practiceRoomDetail.practiceRoomDetailImage ?? ""}
-                                roomName={el.reservationResult.practiceRoom.PracticeRoomName ?? "이름 없음"}
-                                detailName={el.reservationResult.practiceRoomDetail.practiceRoomDetailName ?? "상세 이름 없음"}
+                                img={
+                                    el.reservationResult.practiceRoomDetail
+                                        .practiceRoomDetailImage ?? ""
+                                }
+                                roomName={
+                                    el.reservationResult.practiceRoom
+                                        .PracticeRoomName ?? "이름 없음"
+                                }
+                                detailName={
+                                    el.reservationResult.practiceRoomDetail
+                                        .practiceRoomDetailName ??
+                                    "상세 이름 없음"
+                                }
                                 date={el.reservationResult.date ?? "날짜 없음"}
-                                startTime={el.reservationResult.startTime ?? "시작 시간 없음"}
-                                endTime={el.reservationResult.endTime ?? "종료 시간 없음"}
+                                startTime={
+                                    el.reservationResult.startTime ??
+                                    "시작 시간 없음"
+                                }
+                                endTime={
+                                    el.reservationResult.endTime ??
+                                    "종료 시간 없음"
+                                }
                                 onClick={() => {
                                     if (isPastReservation) {
-                                        alert("이미 종료된 예약은 취소할 수 없습니다.");
+                                        alert(
+                                            "이미 종료된 예약은 취소할 수 없습니다."
+                                        );
                                         return;
                                     }
 
-                                    if (reservationStatus === 'SUCCESS') {
-                                        axiosReservationCancle(
-                                            el.reservationResult.id,
-                                            el.reservationDetailResult.tid,
-                                            el.reservationDetailResult.amount,
-                                            el.reservationDetailResult.tax_free_amount,
-                                            el.reservationDetailResult.vat_amount
-                                        );
+                                    if (reservationStatus === "SUCCESS") {
+                                        const isConfirmed =
+                                            confirm(
+                                                "정말로 예약을 취소하시겠습니까?"
+                                            );
+                                        if (isConfirmed) {
+                                            axiosReservationCancle(
+                                                el.reservationResult.id,
+                                                el.reservationDetailResult.tid,
+                                                el.reservationDetailResult
+                                                    .amount,
+                                                el.reservationDetailResult
+                                                    .tax_free_amount,
+                                                el.reservationDetailResult
+                                                    .vat_amount
+                                            );
+                                        }
                                     } else {
-                                        alert("해당 예약은 결제 완료 상태가 아닙니다.");
+                                        alert(
+                                            "해당 예약은 결제 완료 상태가 아닙니다."
+                                        );
                                     }
                                 }}
                             />

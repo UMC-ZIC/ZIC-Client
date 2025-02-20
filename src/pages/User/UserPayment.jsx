@@ -235,8 +235,8 @@ const UserPayment = () => {
             reservationNumber: date.split("-").join(""),
             practiceRoomDetail: practiceRoomDetailId,
             date,
-            startTime: startTime,
-            endTime: endTime,
+            startTime: start,
+            endTime: end,
         };
 
         const option = {

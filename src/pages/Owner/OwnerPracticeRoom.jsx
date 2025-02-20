@@ -207,6 +207,10 @@ const OwnerPracticeRoom = () => {
     });
 
     useEffect(() => {
+        refetch();
+    }, [likes]);
+
+    useEffect(() => {
         if (!isLoadingPracticeRooms) {
             setPreviewImg(practiceRooms.practiceRoomDTO.img);
         }

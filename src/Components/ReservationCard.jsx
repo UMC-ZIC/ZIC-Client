@@ -22,6 +22,7 @@ const ReservationImg = styled.div`
 `;
 
 const ReservationInfo = styled.div`
+    flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: space-around;
@@ -33,7 +34,7 @@ const TitleWrapper = styled.div`
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 8%;
+    gap: 4%;
 
     p {
         font-size: 130%;
@@ -43,7 +44,7 @@ const TitleWrapper = styled.div`
     div {
         background-color: #d9f0ff;
         font-family: "Pretendard-Regular";
-        padding: 3% 5%;
+        padding: 2% 3%;
         border-radius: 1rem;
     }
 `;
@@ -78,11 +79,7 @@ const ReservationCard = ({
     };
 
     return (
-<<<<<<< HEAD
-        <ReservationContainer onClick={onClick}>
-=======
         <ReservationContainer onClick={onClick ? onClick : null}>
->>>>>>> 64cf041594747cf6b443177e813f25907088c130
             <ReservationImg bgphoto={img} />
             <ReservationInfo>
                 <TitleWrapper>

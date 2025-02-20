@@ -137,6 +137,9 @@ const OwnerAddPracticeRoom = () => {
         queryFn: () => getPracticeRoomLike(practiceRoomId),
     });
 
+    useEffect(() => {
+        refetch();
+    }, [likes]);
     const handleLike = () => {
         postPracticeRoomLike(practiceRoomId).then((res) =>
             res ? refetch() : null

@@ -94,8 +94,9 @@ const User = () => {
             <BottomContent>
                 <span>자주 가는 연습실</span>
                 <PracticeRankBox>
-                    {data.frequentPracticeRooms.frequentPracticeRoomDetailList.map(
-                        (room, index) =>
+                    {data.frequentPracticeRooms.frequentPracticeRoomDetailList
+                        .filter((_, index) => index < 3)
+                        .map((room, index) =>
                             index === 0 ? (
                                 <div key={index}>
                                     <img
@@ -110,41 +111,7 @@ const User = () => {
                                     <p>{room.roomName}</p>
                                 </div>
                             )
-                    )}
-                    {data.frequentPracticeRooms.frequentPracticeRoomDetailList.map(
-                        (room, index) =>
-                            index === 0 ? (
-                                <div key={index}>
-                                    <img
-                                        src="/assets/img/Union.svg"
-                                        alt="1위 아이콘"
-                                    />
-                                    <p>{room.roomName}</p>
-                                </div>
-                            ) : (
-                                <div key={index}>
-                                    <p>{index + 1}</p>
-                                    <p>{room.roomName}</p>
-                                </div>
-                            )
-                    )}
-                    {data.frequentPracticeRooms.frequentPracticeRoomDetailList.map(
-                        (room, index) =>
-                            index === 0 ? (
-                                <div key={index}>
-                                    <img
-                                        src="/assets/img/Union.svg"
-                                        alt="1위 아이콘"
-                                    />
-                                    <p>{room.roomName}</p>
-                                </div>
-                            ) : (
-                                <div key={index}>
-                                    <p>{index + 1}</p>
-                                    <p>{room.roomName}</p>
-                                </div>
-                            )
-                    )}
+                        )}
                 </PracticeRankBox>
             </BottomContent>
         </Container>

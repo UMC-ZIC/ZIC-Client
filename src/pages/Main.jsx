@@ -111,7 +111,7 @@ const Main = () => {
     const [price, setPrice] = useState(null);
 
     const { data, isLoading } = useQuery({
-        queryKey: ["practiceRoom", location, instrument, price],
+        queryKey: ["practiceRoom", location, instrument, price, selectedDate],
         queryFn: () =>
             getPracticeRoomList(
                 1,
@@ -211,7 +211,7 @@ const Main = () => {
                                 selectedDate={selectedDate}
                                 totalCount={room.totalRoomCount}
                                 availableCount={room.availableRoomCount}
-                                price={10000}
+                                price={room.minFee}
                             />
                         ))
                     ) : (

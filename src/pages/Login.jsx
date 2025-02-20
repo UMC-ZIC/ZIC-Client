@@ -82,17 +82,6 @@ const Login = () => {
         window.location.href = `${
             import.meta.env.VITE_API_URL
         }/oauth2/authorization/kakao`;
-        // try {
-        //     const response = await axios.get(
-        //         `${import.meta.env.VITE_API_URL}/oauth2/authorization/kakao`
-        //     );
-        //     console.log("res응답 : " + response);
-        //     if (!response.data.isSuccess) {
-        //         console.error("API 오류: ", response.data);
-        //     }
-        // }catch (error){
-        //     console.log("데이터를 불러오는 중 에러 발생 : ", error);
-        // }
     };
 
     // TODO : 삭제하기 - 테스트용 로그인 api
@@ -113,7 +102,7 @@ const Login = () => {
             </BannerWrapper>
             <KakaoWrapper>
                 {/* 테스트용 나중에 삭제하기 */}
-                <div style={{ display: "flex", width: "100%", gap: "5%" }}>
+                {/* <div style={{ display: "flex", width: "100%", gap: "5%" }}>
                     <Button
                         height={"2rem"}
                         text={"이용자"}
@@ -124,14 +113,21 @@ const Login = () => {
                         text={"대여자"}
                         onClick={handleOwnerLogin}
                     />
-                </div>
-
+                </div> */}
                 <KakaoBtn onClick={kakaoLogin}>
                     <BsChatFill />
                     <p>카카오로 시작하기</p>
                     <div />
                 </KakaoBtn>
-                <a href="/join/category">다른 이메일로 시작하기</a>
+                <a
+                    href="#"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        alert("다른 이메일 가입은 구현이 되지 않았습니다.");
+                    }}
+                >
+                    다른 이메일로 시작하기
+                </a>
             </KakaoWrapper>
         </LoginContainer>
     );

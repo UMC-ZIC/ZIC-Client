@@ -6,9 +6,7 @@ import { checkMobile } from "../../utils/checkMobile";
 import CalendarComponent from "../../Components/Calendar";
 import axios from "axios";
 
-const Container = styled.div.attrs((props) => ({
-    ismobile: undefined,
-}))`
+const Container = styled.div`
     padding: 5%;
     height: 100%;
     width: 100%;
@@ -23,7 +21,7 @@ const CalendarWrapper = styled.div``;
 const ReservationWrapper = styled.div`
     width: 100%;
     height: 100%;
-    
+
     overflow-y: auto; /* 세로 스크롤 활성화 */
     scrollbar-width: none; /* Firefox에서 스크롤바 숨김 */
 
@@ -40,7 +38,9 @@ const ReservationLabel = styled.p`
 `;
 
 const Owner = () => {
-    const [selectedDate, setSelectedDate] = useState(moment().format("YYYY-MM-DD")); //선택한 날짜 (하단에 예약 내역을 표시할 때 사용)
+    const [selectedDate, setSelectedDate] = useState(
+        moment().format("YYYY-MM-DD")
+    ); //선택한 날짜 (하단에 예약 내역을 표시할 때 사용)
     const [reservations, setReservations] = useState({ resultList: [] }); //선택한 날짜의 예약 내역
     const isMobile = checkMobile();
 
@@ -53,21 +53,22 @@ const Owner = () => {
         const fetchReservations = async () => {
             try {
                 const response = await axios.get(
-                    `${import.meta.env.VITE_API_URL}/api/reservation/owner?date=${selectedDate}&page=1`,
-                   {
+                    `${
+                        import.meta.env.VITE_API_URL
+                    }/api/reservation/owner?date=${selectedDate}&page=1`,
+                    {
                         headers: {
-                            Authorization: `eyJ0eXBlIjoiYWNjZXNzVG9rZW4iLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjIsInVzZXJUeXBlIjoiT1dORVIiLCJ1c2VyTmFtZSI6Ik93bmVyVGVzdCIsImlhdCI6MTczOTg1NjU5NywiZXhwIjoxNzM5OTQyOTk3fQ.2FBl4QlMDhc0FfCYqx9W-bLJzQ1IKJU3XP6WQjwioiE`
-                        }
+                            Authorization: localStorage.getItem("accessToken"),
+                        },
                     }
                 );
-    
-                 if (!response.data.isSuccess) {
+
+                if (!response.data.isSuccess) {
                     console.error("API 오류: ", response.data.result);
                     return;
                 }
-    
+
                 setReservations(response.data.result);
-    
             } catch (error) {
                 console.error("예약 내역 불러오기 실패! : ", error);
             }
@@ -76,15 +77,14 @@ const Owner = () => {
         fetchReservations();
     }, [selectedDate]);
 
-    useEffect(() => {
-        console.log("RES 데이터 업데이트됨:", JSON.stringify(reservations, null, 1));
-    }, [reservations]);
-
     // API로 대여자 예약 내역 조회 구현
     return (
         <Container ismobile={isMobile}>
             <CalendarWrapper>
-                <CalendarComponent role="owner" onDateSelect={handleDateSelect}/>
+                <CalendarComponent
+                    role="owner"
+                    onDateSelect={handleDateSelect}
+                />
             </CalendarWrapper>
 
             <ReservationWrapper>
@@ -95,7 +95,9 @@ const Owner = () => {
                             key={el.id}
                             img={el.practiceRoomDetail.practiceRoomDetailImage}
                             roomName={el.practiceRoom.PracticeRoomName}
-                            detailName={el.practiceRoomDetail.practiceRoomDetailName}
+                            detailName={
+                                el.practiceRoomDetail.practiceRoomDetailName
+                            }
                             date={el.date}
                             startTime={el.startTime}
                             endTime={el.endTime}
