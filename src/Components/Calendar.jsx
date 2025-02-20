@@ -8,6 +8,7 @@ const CalendarComponent = ({ role, onDateSelect }) => {
     const [activeMonth, setActiveMonth] = useState(moment().format('YYYY-MM-DD')); //현재 보이는 달 저장
     const [dayList, setDayList] = useState([]); //해당 달의 예약된 날짜 리스트
 
+<<<<<<< HEAD
     const getActiveMonth = (activeStartDate) => {
         const newActiveMonth = moment(activeStartDate).format('YYYY-MM-DD');
         if (newActiveMonth !== activeMonth) { 
@@ -15,6 +16,90 @@ const CalendarComponent = ({ role, onDateSelect }) => {
         }
     };
 
+=======
+const ReactCalendar = () => {
+    const [selectedDate, setSelectedDate] = useState(new Date()); //하단에 예약 내역을 표시할 때 사용
+    const [dayList, setDayList] = useState([]);
+    const [reservations, setReservations] = useState([]);
+    const page = 1; // 페이지 번호 (예시 값)
+
+    //이거는 해당 달에 대한 전체적인 데이터를 조회를 한 후
+    //해당 달에 예약된 날짜가 있다면 점으로 예약내역이 있다라는걸 알려줘야한다
+
+    // useEffect(() => {
+    //     const fetchReservedDates = async () => {
+    //         try {
+    //             const response = await axios.get(
+    //                 `http://43.200.3.214:8080/api/reservation/owner?date=2025-01&page=1`, {
+
+    //                     headers: {
+    //                         Authorization: `eyJ0eXBlIjoiYWNjZXNzVG9rZW4iLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjIsInVzZXJUeXBlIjoiT1dORVIiLCJ1c2VyTmFtZSI6Ik93bmVyVGVzdCIsImlhdCI6MTczOTYzNDQzNCwiZXhwIjoxNzM5NzIwODM0fQ.g245fBrpF4Q4k_XaM1zQ65VIMcMwzZ-ogzqsjNMxR5E`
+    //                     }
+    //             }); console.log("🔍 Authorization 토큰:", localStorage.getItem("accessToken"));
+
+    //             console.log("API 응답: ", response.data);
+
+    //             if (!response.data.isSuccess) {
+    //                 console.error("API 오류: ", response.data);
+    //             }
+
+    //             // 서버에서 받은 데이터 (날짜 리스트로 변환)
+    //             const reservedDates = response.data.map(item => item.date);
+    //             setDayList(reservedDates);
+
+    //             console.log("예약된 날짜 리스트: ", reservedDates);
+
+    //         } catch (error) {
+    //             console.error("예약내역 불러오기 실패", error)
+    //         }
+    //     };
+
+    //     fetchReservedDates();
+    // }, []);
+
+    //하단에 예약 내역을 표시할 때 사용
+    const handleDateSelect = async (date) => {
+        const activeDate = moment(date).format("YYYY-MM-DD");
+        setSelectedDate(date);
+        console.log("선택된 날짜: ", activeDate);
+
+        try {
+            const response = await axios.get(
+                `${
+                    import.meta.env.VITE_API_URL
+                }/api/reservation/owner?date=${activeDate}&page=1`,
+                {
+                    headers: {
+                        Authorization: localStorage.getItem("accessToken"),
+                    },
+                }
+            );
+
+            console.log("API 응답: ", response);
+
+            if (!response.data.isSuccess) {
+                console.error("API 오류: ", response.data);
+            }
+
+            setReservations(response.data);
+        } catch (error) {
+            console.error("예약 내역 불러오기 실패! : ", error);
+        }
+    };
+
+    return (
+        <div>
+            <CalendarComponent
+                onDateSelect={handleDateSelect}
+                value={selectedDate}
+                dayList={dayList} // API에서 가져온 날짜 리스트 전달
+            />
+        </div>
+    );
+};
+
+const CalendarComponent = ({ onDateSelect, value, dayList }) => {
+>>>>>>> 64cf041594747cf6b443177e813f25907088c130
     const tileClassName = ({ date, view }) => {
         // view가 "month"일 때만 적용
         if (view === "month") {
@@ -114,4 +199,9 @@ const CalendarComponent = ({ role, onDateSelect }) => {
     );
 };
 
+<<<<<<< HEAD
 export default CalendarComponent;
+=======
+export default ReactCalendar;
+export { CalendarComponent };
+>>>>>>> 64cf041594747cf6b443177e813f25907088c130

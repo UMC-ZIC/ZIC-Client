@@ -1,17 +1,17 @@
 import styled from "styled-components";
 import Button from "../../Components/Button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { JoinContainer } from "../../styles/container";
 import Calendar from "../../Components/Calendar"
 
 const Wrapper = styled.div`
-    height: 70%;
+    height: 100%;
     width: 100%;
     margin-top: 3%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: end;
     align-items: center;
 
     div {
@@ -20,26 +20,28 @@ const Wrapper = styled.div`
 
     h1 {
         font-family: "Pretendard-Bold";
-        font-size: 125%;
+        font-size: 130%;
         font-weight: 400px;
     }
 `;
 
 const BtnWrapper = styled.div`
     width: 100%;
-    height: 30%;
-    margin-top: 15%;
+    height: 10rem;
+    margin-top: 12%;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     grid-template-rows: 1fr;
     grid-column-gap: 15px;
 `;
 
-const JoinBtn = styled.button`
+const JoinBtn = styled.button.withConfig({
+    shouldForwardProp: (prop) => prop !== "isActive",
+})`
     text-align: center;
     font-family: "Pretendard-Bold";
     color: ${(props) => (props.isActive ? "white" : "black")};
-    font-size: 16px;
+    font-size: 110%;
     letter-spacing: 1px;
     width: 100%;
     height: 100%;

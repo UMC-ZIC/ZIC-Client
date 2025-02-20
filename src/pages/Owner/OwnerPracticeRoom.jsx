@@ -1,13 +1,8 @@
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { IoIosArrowBack } from "react-icons/io";
-import { CiHeart } from "react-icons/ci";
 import { useEffect, useState } from "react";
-import { FaHeart } from "react-icons/fa";
-import { FiMapPin } from "react-icons/fi";
 import { MdOutlineArrowForwardIos } from "react-icons/md";
-import { userDetailRoom } from "../../assets/userDetailRoom";
-import { ownerPracticeRoom } from "../../assets/OwnerPracticeRoom";
 import {
     getDownloadURL,
     getStorage,
@@ -18,6 +13,15 @@ import { app } from "../../firebase";
 import { useDropzone } from "react-dropzone";
 import PracticeRoomDetailCard from "../../Components/OwnerPracticeRoomDetailCard";
 import Button from "../../Components/Button";
+import { useQuery } from "@tanstack/react-query";
+import {
+    axiosOwnerPracticeRoomDetail,
+    patchOwnerPracticeRoom,
+} from "../../api/owner";
+import { getPracticeRoomLike, postPracticeRoomLike } from "../../api/etc";
+import IFilledHeart from "../../Components/icons/IfilledHeart";
+import IHeart from "../../Components/icons/Iheart";
+import IPin from "../../Components/icons/Ipin";
 
 const MainPracticeRoomContainer = styled.div`
     width: 100%;
@@ -36,6 +40,11 @@ const Banner = styled.div`
     background-size: cover;
     background-repeat: no-repeat;
     position: relative;
+    cursor: pointer;
+
+    &:hover {
+        border: 0.5rem solid #278cff;
+    }
 `;
 
 const BackBtn = styled.div`
@@ -119,22 +128,10 @@ const Title = styled.div`
         color: #7d7d7d;
         cursor: pointer;
     }
-`;
 
-// ✅ FaHeart에 스타일 적용
-const StyledFaHeart = styled(FaHeart)`
-    color: #ff4e4e;
-    margin-right: 6%;
-    width: 1rem;
-    height: 1rem;
-`;
-
-// ✅ CiHeart는 기본 색상 유지
-const StyledCiHeart = styled(CiHeart)`
-    color: #7d7d7d;
-    margin-right: 6%;
-    width: 1rem;
-    height: 1rem;
+    span {
+        margin-left: 0.5rem;
+    }
 `;
 
 const Address = styled.div`
@@ -182,21 +179,71 @@ const BtnContainer = styled.div`
 
 const OwnerPracticeRoom = () => {
     const navigate = useNavigate();
-    const [toggleActive, setToggleActive] = useState(false);
     const [img, setImg] = useState(null);
-    const [previewImg, setPreviewImg] = useState(ownerPracticeRoom.img);
+    const [previewImg, setPreviewImg] = useState(
+        import.meta.env.VITE_DEFAULT_IMG
+    );
+    const [notUpload, setNotUpload] = useState(true);
+
+    const { data: practiceRooms, isLoading: isLoadingPracticeRooms } = useQuery(
+        {
+            queryKey: ["practiceRooms"],
+            queryFn: () => axiosOwnerPracticeRoomDetail(),
+        }
+    );
+
+    const {
+        data: likes,
+        isLoading: isLoadingLikes,
+        refetch,
+    } = useQuery({
+        queryKey: [
+            "practiceRoomLikes",
+            practiceRooms?.practiceRoomDTO?.practiceRoomId,
+        ],
+        queryFn: () =>
+            getPracticeRoomLike(practiceRooms.practiceRoomDTO.practiceRoomId),
+        enabled: !!practiceRooms?.practiceRoomDTO?.practiceRoomId,
+    });
+
+    useEffect(() => {
+        if (!isLoadingPracticeRooms) {
+            setPreviewImg(practiceRooms.practiceRoomDTO.img);
+        }
+    }, [practiceRooms]);
+
+    const handleLike = () => {
+        postPracticeRoomLike(practiceRooms.practiceRoomDTO.practiceRoomId).then(
+            (res) => (res ? refetch() : null)
+        );
+    };
 
     useEffect(() => {
         if (img == null) {
             return;
         } else {
-            uploadImg(img).then((url) => {
-                alert(
-                    `연습실 대표 사진이 변경되었습니다.
-                \n이미지 Url: ${url}
-                `
-                );
-            });
+            if (notUpload) {
+                uploadImg(img).then((url) => {
+                    const body = {
+                        name: practiceRooms.practiceRoomDTO.name,
+                        address: practiceRooms.practiceRoomDTO.address,
+                        image: url,
+                        latitude: practiceRooms.practiceRoomDTO.latitude,
+                        longitude: practiceRooms.practiceRoomDTO.longitude,
+                    };
+                    setNotUpload(true);
+                    patchOwnerPracticeRoom(
+                        practiceRooms.practiceRoomDTO.practiceRoomId,
+                        body
+                    ).then((res) =>
+                        res.isSuccess
+                            ? alert("변경되었습니다.")
+                            : alert("어떤 문제가 발생하였습니다.")
+                    );
+                });
+            } else {
+                console.log("업로드 중 입니다.");
+            }
         }
     }, [img]);
 
@@ -204,10 +251,12 @@ const OwnerPracticeRoom = () => {
     const uploadImg = (file) => {
         return new Promise((resolve, reject) => {
             try {
+                setNotUpload(false);
                 const storage = getStorage(app);
-                const fileName = `zic/test/main/${
-                    file.name
-                }_${new Date().getTime()}`;
+                // 연습실 대표 사진 이름 형식 = zic/{대여자 이름}/main/{파일 이름}_{현재 시간}
+                const fileName = `zic/${localStorage.getItem(
+                    "userName"
+                )}_${localStorage.getItem("userId")}/main/${file.name}`;
                 const storageRef = ref(storage, fileName);
                 const uploadTask = uploadBytesResumable(storageRef, file);
                 uploadTask.on(
@@ -229,12 +278,14 @@ const OwnerPracticeRoom = () => {
                             );
                             resolve(url);
                         } catch (error) {
+                            setNotUpload(true);
                             reject(error);
                         }
                     }
                 );
             } catch (error) {
                 alert("Image Upload Failed");
+                setNotUpload(true);
                 reject(error);
             }
         });
@@ -277,58 +328,68 @@ const OwnerPracticeRoom = () => {
 
     const { getRootProps, getInputProps } = useDropzone({ onDrop }); // html 컴포넌트와 연결
 
-    return (
+    return isLoadingPracticeRooms ? null : (
         <MainPracticeRoomContainer>
             <Banner {...getRootProps()} bgphoto={previewImg}>
                 <input multiple={false} name="imgUrl" {...getInputProps()} />
             </Banner>
             <BackBtn>
-                <IoIosArrowBack onClick={() => navigate(-1)} />
+                <IoIosArrowBack onClick={() => navigate("/owner")} />
             </BackBtn>
 
             <PracticeRoomContainer>
                 <TitleContainer>
                     <Title>
-                        <p>{ownerPracticeRoom.name}</p>
-                        <div onClick={() => setToggleActive(!toggleActive)}>
-                            {toggleActive ? (
-                                <StyledFaHeart />
-                            ) : (
-                                <StyledCiHeart />
-                            )}
-                            {/* TODO : 좋아요 기능 구현 */}
-                            <span>
-                                {ownerPracticeRoom.like > 100
-                                    ? "99+"
-                                    : ownerPracticeRoom.like}
-                            </span>
-                        </div>
+                        <p>{practiceRooms.practiceRoomDTO.name}</p>
+                        {!isLoadingLikes && (
+                            <div onClick={() => handleLike()}>
+                                {/* 본인 id 가져와서 바교하기 */}
+                                {likes.find(
+                                    (like) =>
+                                        like == localStorage.getItem("userId")
+                                ) ? (
+                                    <IFilledHeart
+                                        width={"1rem"}
+                                        height={"1rem"}
+                                    />
+                                ) : (
+                                    <IHeart width={"1rem"} height={"1rem"} />
+                                )}
+                                <span>
+                                    {(likes?.length || 0) > 100
+                                        ? "99+"
+                                        : likes?.length || 0}
+                                </span>
+                            </div>
+                        )}
                     </Title>
                     <Address>
                         <a
                             href={`https://map.naver.com/p/search/${
-                                ownerPracticeRoom.region +
+                                practiceRooms.practiceRoomDTO.region +
                                 " " +
-                                ownerPracticeRoom.address
+                                practiceRooms.practiceRoomDTO.address
                             }`}
                         >
-                            <FiMapPin />
-                            {ownerPracticeRoom.region +
+                            <IPin width={"1.2rem"} height={"1.2rem"} />
+                            {practiceRooms.practiceRoomDTO.region +
                                 " " +
-                                ownerPracticeRoom.address}
+                                practiceRooms.practiceRoomDTO.address}
                             <MdOutlineArrowForwardIos />
                         </a>
                     </Address>
                 </TitleContainer>
             </PracticeRoomContainer>
             <CardContainer>
-                {userDetailRoom.map((el) => (
+                {practiceRooms.practiceRoomDetailDTO.map((el) => (
                     <PracticeRoomDetailCard
                         key={el.practiceRoomDetailId}
-                        img={el.image}
+                        img={el.img}
                         name={el.name}
                         fee={el.fee}
-                        PracticeRoomId={el.practiceRoomDetailId}
+                        PracticeRoomId={
+                            practiceRooms.practiceRoomDTO.practiceRoomId
+                        }
                         status={el.status}
                         DetailId={el.practiceRoomDetailId}
                     />
@@ -340,7 +401,7 @@ const OwnerPracticeRoom = () => {
                     height={"100%"}
                     onClick={() =>
                         navigate(
-                            `/owner/practiceRoom/${userDetailRoom[0].practiceRoomDetailId}/practiceRoomDetail`
+                            `/owner/practiceRoom/${practiceRooms.practiceRoomDTO.practiceRoomId}/practiceRoomDetail`
                         )
                     }
                 />

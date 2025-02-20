@@ -1,13 +1,14 @@
 import styled from "styled-components";
 import { IoIosArrowBack } from "react-icons/io";
-import { useNavigate } from "react-router-dom";
-import { CiHeart } from "react-icons/ci";
-import { useState } from "react";
-import { FaHeart } from "react-icons/fa";
-import { FiMapPin } from "react-icons/fi";
+import { useNavigate, useParams } from "react-router-dom";
 import { MdOutlineArrowForwardIos } from "react-icons/md";
 import AddPracticeRoom from "../../Components/AddPracticeRoom";
-import { ownerPracticeRoom } from "../../assets/OwnerPracticeRoom";
+import { useQuery } from "@tanstack/react-query";
+import { getPracticeRoomLike, postPracticeRoomLike } from "../../api/etc";
+import { axiosOwnerPracticeRoomDetail } from "../../api/owner";
+import IFilledHeart from "../../Components/icons/IfilledHeart";
+import IHeart from "../../Components/icons/Iheart";
+import IPin from "../../Components/icons/Ipin";
 
 const OwnerPracticeRoomContainer = styled.div`
     width: 100%;
@@ -95,22 +96,10 @@ const Title = styled.div`
         color: #7d7d7d;
         cursor: pointer;
     }
-`;
 
-// ✅ FaHeart에 스타일 적용
-const StyledFaHeart = styled(FaHeart)`
-    color: #ff4e4e;
-    margin-right: 6%;
-    width: 1rem;
-    height: 1rem;
-`;
-
-// ✅ CiHeart는 기본 색상 유지
-const StyledCiHeart = styled(CiHeart)`
-    color: #7d7d7d;
-    margin-right: 6%;
-    width: 1rem;
-    height: 1rem;
+    span {
+        margin-left: 0.5rem;
+    }
 `;
 
 const Address = styled.div`
@@ -131,45 +120,75 @@ const Address = styled.div`
 
 const OwnerAddPracticeRoom = () => {
     const navigate = useNavigate();
-    const [toggleActive, setToggleActive] = useState(false);
+    const { practiceRoomId } = useParams();
 
-    return (
+    const { data: practiceRooms, isLoading: isLoadingPracticeRooms } = useQuery(
+        {
+            queryKey: ["practiceRooms"],
+            queryFn: () => axiosOwnerPracticeRoomDetail(),
+        }
+    );
+    const {
+        data: likes,
+        isLoading: isLoadingLikes,
+        refetch,
+    } = useQuery({
+        queryKey: ["practiceRoomLikes", practiceRoomId],
+        queryFn: () => getPracticeRoomLike(practiceRoomId),
+    });
+
+    const handleLike = () => {
+        postPracticeRoomLike(practiceRoomId).then((res) =>
+            res ? refetch() : null
+        );
+    };
+
+    return isLoadingPracticeRooms ? null : (
         <OwnerPracticeRoomContainer>
-            <Banner bgphoto={ownerPracticeRoom.img}></Banner>
+            <Banner bgphoto={practiceRooms.practiceRoomDTO.img} />
             <BackBtn>
-                <IoIosArrowBack onClick={() => navigate(-1)} />
+                <IoIosArrowBack
+                    onClick={() => navigate("/owner/practiceRoom")}
+                />
             </BackBtn>
 
             <PracticeRoomContainer>
                 <TitleContainer>
                     <Title>
-                        <p>{ownerPracticeRoom.name}</p>
-                        <div onClick={() => setToggleActive(!toggleActive)}>
-                            {toggleActive ? (
-                                <StyledFaHeart />
-                            ) : (
-                                <StyledCiHeart />
-                            )}
-                            {/* TODO : 좋아요 기능 구현 */}
-                            <span>
-                                {ownerPracticeRoom.like > 100
-                                    ? "99+"
-                                    : ownerPracticeRoom.like}
-                            </span>
-                        </div>
+                        <p>{practiceRooms.practiceRoomDTO.name}</p>
+                        {!isLoadingLikes && (
+                            <div onClick={() => handleLike()}>
+                                {likes.find(
+                                    (like) =>
+                                        like == localStorage.getItem("userId")
+                                ) ? (
+                                    <IFilledHeart
+                                        width={"1rem"}
+                                        height={"1rem"}
+                                    />
+                                ) : (
+                                    <IHeart width={"1rem"} height={"1rem"} />
+                                )}
+                                <span>
+                                    {(likes?.length || 0) > 100
+                                        ? "99+"
+                                        : likes?.length || 0}
+                                </span>
+                            </div>
+                        )}
                     </Title>
                     <Address>
                         <a
                             href={`https://map.naver.com/p/search/${
-                                ownerPracticeRoom.region +
+                                practiceRooms.practiceRoomDTO.region +
                                 " " +
-                                ownerPracticeRoom.address
+                                practiceRooms.practiceRoomDTO.address
                             }`}
                         >
-                            <FiMapPin />
-                            {ownerPracticeRoom.region +
+                            <IPin width={"1.2rem"} height={"1.2rem"} />
+                            {practiceRooms.practiceRoomDTO.region +
                                 " " +
-                                ownerPracticeRoom.address}
+                                practiceRooms.practiceRoomDTO.address}
                             <MdOutlineArrowForwardIos />
                         </a>
                     </Address>

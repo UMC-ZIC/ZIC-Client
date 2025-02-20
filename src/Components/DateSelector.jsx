@@ -7,7 +7,6 @@ const Container = styled.div`
     height: 100%;
     display: grid;
     grid-template-rows: ${(props) => (props.showDate ? "30% 50%" : "1fr")};
-    background: #fff;
     box-sizing: border-box;
     gap: 8%;
 
@@ -177,7 +176,10 @@ const DateSelector = ({ onlyMonth, showDate, onChange }) => {
                 >
                     <img src={"/assets/img/prev-button.png"} />
                 </NextBtn>
-                <span>{getMonthName(currentMonth)}.</span>
+                <span>
+                    {getMonthName(currentMonth)}
+                    {!onlyMonth && "."}
+                </span>
                 <NextBtn
                     onClick={() => {
                         changeMonth(1);
