@@ -150,25 +150,25 @@
 }
 
 .red-day { /*날짜*/
-    color: red !important; /* 일요일 */
+    color: red ; /* 일요일 */
 }
 
 .blue-day {
-    color: blue !important; /* 토요일 */
+    color: blue; /* 토요일 */
 }
 
 .black-day {
-    color: black !important; /* 평일 */
+    color: black; /* 평일 */
 }
 
 .react-calendar__month-view__weekdays__weekday { /*요일*/
-    color: black !important; /* 기본 요일 검정색 */
+    color: black; /* 기본 요일 검정색 */
 
     &:first-child { 
         color: red !important; /* 일요일 */
     }
     &:last-child {
-        color: blue !important; /* 일요일 */
+        color: blue !important; /* 토요일 */
     }
 }
 

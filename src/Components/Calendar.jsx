@@ -21,8 +21,14 @@ const CalendarComponent = ({ role, onDateSelect }) => {
         // view가 "month"일 때만 적용
         if (view === "month") {
             // 날짜가 일요일(0) 또는 토요일(6)일 경우 빨간색
-            if (date.getDay() === 0 || date.getDay() === 6) {
+            if (date.getDay() === 0 ) {
                 return "red-day"; // "red-day" 클래스를 반환
+            }
+            else if (date.getDay() === 6) {
+                return "blue-day";
+            }
+            else {
+                return "black-day";
             }
         }
         return "";
