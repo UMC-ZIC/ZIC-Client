@@ -2,11 +2,14 @@ import styled from "styled-components";
 import { IoIosArrowBack } from "react-icons/io";
 import { FiMapPin } from "react-icons/fi";
 import { MdOutlineArrowForwardIos } from "react-icons/md";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ownerPracticeRoom } from "../../assets/OwnerPracticeRoom";
 import Button from "../../Components/Button";
+import axios from "axios";
 import { TimePicker } from "react-ios-time-picker";
+import { checkMobile } from "../../utils/checkMobile";
+import { useQuery } from "@tanstack/react-query";
+import { getUserPracticeRoom, getUserPracticeRoomDetail } from "../../api/user";
 
 const Container = styled.div`
     width: 100%;
@@ -110,11 +113,11 @@ const TimeContainer = styled.div`
     input,
     p {
         font-family: "Pretendard-Bold";
-        font-size: 170%;
+        font-size: 160%;
     }
 
     input {
-        width: 5rem;
+        width: 8rem;
         border: 2px solid transparent;
         border-radius: 1rem;
         text-align: center;
@@ -169,36 +172,130 @@ const Total = styled.div`
     }
 `;
 
+const BackDiv = styled.div`
+    position: absolute;
+    height: 100vh;
+    width: 100vw;
+    max-width: 500px;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 50;
+`;
+
 const UserPayment = () => {
     const navigate = useNavigate();
-    const fee = 10000;
-    const [startTime, setStartTime] = useState("01:00");
-    const [endTime, setEndTime] = useState("12:00");
+    const [startTime, setStartTime] = useState("01:00 AM");
+    const [start, setStart] = useState("");
+    const [end, setEnd] = useState("");
+    const [endTime, setEndTime] = useState("12:00 AM");
     const [total, setTotal] = useState(0);
+    const [startToggle, setStartToggle] = useState(false);
+    const [endToggle, setEndToggle] = useState(false);
     const [query] = useSearchParams();
     const date = query.get("date");
+    const { practiceRoomId, practiceRoomDetailId } = useParams();
+
+    const { data: practiceRoom, isLoading: isLoadingPracticeRoom } = useQuery({
+        queryKey: ["practiceRoom", practiceRoomId],
+        queryFn: () => getUserPracticeRoom(practiceRoomId),
+    });
+
+    const { data: detailRoom, isLoading: isLoadingDetail } = useQuery({
+        queryKey: ["practiceRoomDetail", practiceRoomDetailId],
+        queryFn: () => getUserPracticeRoomDetail(practiceRoomDetailId),
+    });
 
     useEffect(() => {
-        const tax_free = subtractTimes(startTime, endTime).hours * fee;
-        const tax = tax_free / 10;
-        setTotal(tax_free + tax);
+        const startDate = toTime(startTime);
+        const endDate = toTime(endTime);
+
+        const formatTime = (date) => {
+            const hours = String(date.getHours()).padStart(2, "0"); // 두 자리 숫자로 변환
+            const minutes = String(date.getMinutes()).padStart(2, "0");
+            return `${hours}:${minutes}`;
+        };
+
+        setStart(formatTime(startDate));
+        setEnd(formatTime(endDate));
+
+        if (!isLoadingDetail) {
+            const tax_free =
+                subtractTimes(startTime, endTime).hours * detailRoom.fee;
+            const tax = tax_free / 10;
+            setTotal(tax_free + tax);
+        }
     }, [startTime, endTime]);
 
     const hanldeNext = () => {
-        if (toTime(startTime).getTime() > toTime(endTime).getTime()) {
+        console.log(`Start : ${start}, End : ${end}`);
+        if (toTime(start).getTime() > toTime(end).getTime()) {
             return alert("시작 시간이 종료 시간보다 늦어선 안됩니다.");
         }
+
         const body = {
+            reservationNumber: date.split("-").join(""),
+            practiceRoomDetail: practiceRoomDetailId,
+            date,
             startTime: startTime,
             endTime: endTime,
         };
-        console.log(body);
+
+        const option = {
+            url: `${
+                import.meta.env.VITE_API_URL
+            }/api/reservation/payment/kakao/ready`,
+            method: "POST",
+            headers: {
+                Authorization: localStorage.getItem("accessToken"),
+                "Content-Type": "application/json",
+            },
+            data: body,
+        };
+
+        axios(option)
+            .then((res) => {
+                const reservationData = {
+                    tid: res.data.result.paymentResponse.tid,
+                    reservationNumber:
+                        res.data.result.reservationResult.reservationNumber,
+                    reservationId: res.data.result.reservationResult.id,
+                    date: res.data.result.reservationResult.date,
+                };
+
+                window.sessionStorage.setItem(
+                    "reservationData",
+                    JSON.stringify(reservationData)
+                );
+
+                checkMobile()
+                    ? (window.location.href =
+                          res.data.result.paymentResponse.next_redirect_mobile_url)
+                    : (window.location.href =
+                          res.data.result.paymentResponse.next_redirect_pc_url);
+            })
+            .catch((err) => {
+                if (err.response && err.response.data.result?.startTime) {
+                    alert(err.response.data.result.startTime);
+                } else {
+                    console.log(err);
+                }
+            });
     };
 
     const toTime = (time) => {
-        const [hours, minutes] = time.split(":").map(Number);
+        const [hours, minutes] = time.split(":");
+        const [min, format] = minutes.split(" ");
+
+        let hour = parseInt(hours, 10);
+        const minute = parseInt(min, 10);
+
+        if (format === "PM" && hour !== 12) {
+            hour += 12; // PM이면 12 더하기 (단, 12 PM이면 그대로)
+        } else if (format === "AM" && hour === 12) {
+            hour = 0; // 12 AM이면 0으로 변환
+        }
+
         const date = new Date();
-        date.setHours(hours, minutes, 0, 0);
+        date.setHours(hour, minute, 0, 0);
         return date;
     };
 
@@ -217,42 +314,55 @@ const UserPayment = () => {
         <Container>
             <Wrapper>
                 <BackBtn>
-                    <IoIosArrowBack onClick={() => navigate(-1)} />
+                    <IoIosArrowBack
+                        onClick={() =>
+                            navigate(
+                                `/practiceRoom/${practiceRoomId}?date=${date}`
+                            )
+                        }
+                    />
                 </BackBtn>
                 <TitleContainer>
-                    <Title>
-                        <p>{ownerPracticeRoom.name}</p>
-                    </Title>
+                    {!isLoadingPracticeRoom && (
+                        <>
+                            <Title>
+                                <p>{practiceRoom.name}</p>
+                            </Title>
 
-                    <div>
-                        <Address
-                            href={`https://map.naver.com/p/search/${
-                                ownerPracticeRoom.region +
-                                " " +
-                                ownerPracticeRoom.address
-                            }`}
-                        >
-                            <FiMapPin />
-                            {ownerPracticeRoom.region +
-                                " " +
-                                ownerPracticeRoom.address}
-                            <MdOutlineArrowForwardIos />
-                        </Address>
-                    </div>
+                            <div>
+                                <Address
+                                    href={`https://map.naver.com/p/search/${
+                                        practiceRoom.region +
+                                        " " +
+                                        practiceRoom.address
+                                    }`}
+                                >
+                                    <FiMapPin />
+                                    {practiceRoom.region +
+                                        " " +
+                                        practiceRoom.address}
+                                    <MdOutlineArrowForwardIos />
+                                </Address>
+                            </div>
+                        </>
+                    )}
                 </TitleContainer>
 
                 <ReservationContainer>
                     <TimeContainer>
+                        {/* UI 변경하기 */}
                         <TimePicker
                             onChange={setStartTime}
                             value={startTime}
                             className="react-ios-time-picker"
+                            use12Hours
                         />
                         <p>~</p>
                         <TimePicker
                             onChange={setEndTime}
                             value={endTime}
                             className="react-ios-time-picker"
+                            use12Hours
                         />
                     </TimeContainer>
                     <InfoContainer>
@@ -269,7 +379,12 @@ const UserPayment = () => {
                         </div>
                         <div>
                             <p>시간 당 금액</p>
-                            <p>{fee.toLocaleString()}원</p>
+                            <p>
+                                {!isLoadingDetail
+                                    ? detailRoom.fee.toLocaleString()
+                                    : 0}
+                                원
+                            </p>
                         </div>
                         <div>
                             <p>수수료</p>
@@ -283,6 +398,36 @@ const UserPayment = () => {
                 </ReservationContainer>
             </Wrapper>
             <Button text="결제하기" onClick={hanldeNext} height={"100%"} />
+
+            {(startToggle || endToggle) && (
+                <>
+                    <BackDiv
+                        onClick={() => {
+                            setStartToggle(false);
+                            setEndToggle(false);
+                        }}
+                    />
+                    <SelectTime />
+                </>
+            )}
+            {startToggle && (
+                <SelectTime
+                    text={"시작 시간"}
+                    notMin={true}
+                    time={startTime}
+                    setTime={setStartTime}
+                    onCancel={setStartToggle}
+                />
+            )}
+            {endToggle && (
+                <SelectTime
+                    text={"종료 시간"}
+                    notMin={true}
+                    time={endTime}
+                    setTime={setEndTime}
+                    onCancel={setEndToggle}
+                />
+            )}
         </Container>
     );
 };

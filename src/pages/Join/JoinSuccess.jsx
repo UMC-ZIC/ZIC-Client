@@ -1,7 +1,8 @@
 import Button from "../../Components/Button";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const Container = styled.div`
     height: 100vh;
@@ -56,7 +57,13 @@ const JoinSuccess = () => {
         if (param.role == "user") {
             navigate("/");
         } else if (param.role == "owner") {
-            navigate("/owner/practiceRoom");
+            const practiceRoomId = localStorage.getItem("practiceRoomId");
+            console.log(practiceRoomId);
+            localStorage.removeItem("practiceRoomId");
+
+            navigate(
+                `/owner/practiceRoom/${practiceRoomId}/practiceRoomDetail`
+            );
         }
     };
 

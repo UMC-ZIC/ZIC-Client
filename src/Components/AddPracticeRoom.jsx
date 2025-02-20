@@ -10,8 +10,13 @@ import {
     uploadBytesResumable,
 } from "firebase/storage";
 import { app } from "../firebase";
-import { useMatch, useParams } from "react-router-dom";
-import { userDetailRoom } from "../assets/userDetailRoom";
+import { useMatch, useParams, useNavigate } from "react-router-dom";
+import {
+    getOwnerPracticeRoomDetail,
+    postOwnerPracticeRoomDetail,
+    patchPracticeRoomDetailStatus,
+    patchOwnerPracticeRoomDetail,
+} from "../api/owner";
 
 const Container = styled.div`
     width: 100%;
@@ -35,6 +40,7 @@ const AddPhoto = styled.div`
     justify-content: center;
     align-items: center;
     box-sizing: border-box;
+    cursor: pointer;
 
     &:hover {
         border-color: #278cff;
@@ -116,46 +122,124 @@ const AddPracticeRoom = () => {
     const addPractice = useMatch(
         "/owner/practiceRoom/:practiceRoomId/practiceRoomDetail"
     );
+    const navigate = useNavigate();
     const [roomName, setRoomName] = useState("");
     const [roomPrice, setRoomPrice] = useState("");
-    const { practiceRoomDetailId } = useParams();
+    const { practiceRoomDetailId, practiceRoomId } = useParams();
     const [previewImg, setPreviewImg] = useState(""); // 브라우저에 보여줄 이미지 주소
     const [img, setImg] = useState(null); // firebase에 저장할 img 정보
+    const [notUpload, setNotUpload] = useState(true);
 
     useEffect(() => {
         if (practiceRoomDetailId) {
-            setPreviewImg(userDetailRoom[0].image);
-            setRoomName(userDetailRoom[0].name);
-            setRoomPrice(userDetailRoom[0].fee);
+            console.log(practiceRoomDetailId);
+            getOwnerPracticeRoomDetail(practiceRoomDetailId).then((res) => {
+                setPreviewImg(res.image);
+                setRoomName(res.name);
+                setRoomPrice(res.fee);
+            });
         }
     }, [practiceRoomDetailId]);
 
     const handleAddRoom = () => {
-        // if (!roomName || !roomPrice) {
-        //     alert("룸명과 가격을 모두 입력해주세요.");
-        //     return;
-        // }
+        if (!roomName || !roomPrice) {
+            alert("룸명과 가격을 모두 입력해주세요.");
+            return;
+        }
 
-        // TODO : 아래 부터 추가된 코드
-        // firebase에 이미지 업로드 완료시 알림
-        uploadImg(img).then((url) => {
-            alert(
-                `룸이 추가되었습니다!
-            \n룸명: ${roomName}
-            \n시간당 이용 가격: ${roomPrice}원
-            \n이미지 Url: ${url}
-            `
-            );
-            console.log(url); // TODO : 삭제할 것
-        });
+        // 내부 방 추가할 떄
+        if (notUpload && addPractice) {
+            // firebase에 이미지 업로드 완료시 알림
+            uploadImg(img).then((url) => {
+                const body = {
+                    name: roomName,
+                    fee: roomPrice,
+                    image: url,
+                    status: "AVAILABLE",
+                };
+                postOwnerPracticeRoomDetail(practiceRoomId, body)
+                    .then((res) => {
+                        {
+                            alert("방이 추가되었습니다.");
+                            setNotUpload(true);
+                            navigate("/owner/practiceRoom");
+                        }
+                        console.log(res);
+                    })
+                    .catch((e) => console.log(e));
+            });
+        } else if (notUpload && !addPractice && img) {
+            // 내부방 이미지가 변경될 떄
+            uploadImg(img).then((url) => {
+                const body = {
+                    name: roomName,
+                    fee: roomPrice,
+                    image: url,
+                    status: "AVAILABLE",
+                };
+                console.log("Img changed");
+                console.log(body);
+                patchOwnerPracticeRoomDetail(
+                    practiceRoomDetailId,
+                    body,
+                    "PATCH"
+                )
+                    .then((res) => {
+                        {
+                            alert("방 정보가 변경되었습니다.");
+                            setNotUpload(true);
+                            navigate("/owner/practiceRoom");
+                        }
+                        console.log(res);
+                    })
+                    .catch((e) => console.log(e));
+            });
+        } else if (notUpload) {
+            // 내부방 이미지가 그대로일 때
+            const body = {
+                name: roomName,
+                fee: roomPrice,
+                image: previewImg,
+                status: "AVAILABLE",
+            };
+            console.log("Img Not change");
+            console.log(body);
+            patchOwnerPracticeRoomDetail(practiceRoomDetailId, body, "PATCH")
+                .then((res) => {
+                    alert("방 정보가 변경되었습니다.");
+                    setNotUpload(true);
+                    navigate("/owner/practiceRoom");
+                })
+                .catch((e) => console.log(e));
+        } else {
+            console.log("업로드 중입니다.");
+        }
+    };
+
+    const toggleStatus = () => {
+        if (practiceRoomDetailId) {
+            patchPracticeRoomDetailStatus(practiceRoomDetailId)
+                .then((res) => {
+                    res.isSuccess &&
+                        alert(
+                            `내부 방 상태가 [${res.result.status}]로 변경되었습니다.`
+                        );
+                    navigate("/owner/practiceRoom");
+                })
+                .catch((e) => console.log(e));
+        }
     };
 
     // firebase에 이미지 저장하는 함수
     const uploadImg = (file) => {
         return new Promise((resolve, reject) => {
             try {
+                setNotUpload(false);
                 const storage = getStorage(app);
-                const fileName = `zic/test/room/${
+                // 연습실 내부방 사진 이름 형식 = zic/{대여자 이름}/room/{파일 이름}_{현재 시간}
+                const fileName = `zic/${localStorage.getItem(
+                    "userName"
+                )}_${localStorage.getItem("userId")}/room/${
                     file.name
                 }_${new Date().getTime()}`;
                 const storageRef = ref(storage, fileName);
@@ -170,6 +254,7 @@ const AddPracticeRoom = () => {
                     },
                     (error) => {
                         alert("Image Upload Failed");
+                        setNotUpload(true);
                         reject(error);
                     },
                     async () => {
@@ -179,12 +264,14 @@ const AddPracticeRoom = () => {
                             );
                             resolve(url);
                         } catch (error) {
+                            setNotUpload(true);
                             reject(error);
                         }
                     }
                 );
             } catch (error) {
                 alert("Image Upload Failed");
+                setNotUpload(true);
                 reject(error);
             }
         });
@@ -256,7 +343,11 @@ const AddPracticeRoom = () => {
                 {addPractice ? (
                     <div />
                 ) : (
-                    <Button text={"이용중지"} height={"20%"} />
+                    <Button
+                        text={"이용중지"}
+                        height={"20%"}
+                        onClick={toggleStatus}
+                    />
                 )}
                 <Button
                     text={addPractice ? "+ 룸 추가하기" : "변경하기"}

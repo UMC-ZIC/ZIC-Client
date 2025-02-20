@@ -48,7 +48,6 @@ const Chart = ({ list }) => {
             labels: {
                 style: {
                     fontFamily: "Pretendard-Light", // ✅ 폰트 변경
-                    colors: ["#7D7D7D"], // ✅ 글자 색상 (어두운 회색)
                 },
             },
         },

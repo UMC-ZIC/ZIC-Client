@@ -11,9 +11,6 @@ const Container = styled.div`
     height: 100%;
     width: 100%;
     max-width: 500px;
-    /* TODO : 경계선 지우기 */
-    border-left: 2px solid black;
-    border-right: 2px solid black;
 `;
 
 const RootContainer = () => {

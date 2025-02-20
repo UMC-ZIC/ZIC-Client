@@ -1,14 +1,18 @@
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import { IoIosArrowBack } from "react-icons/io";
-import { CiHeart } from "react-icons/ci";
-import { useState } from "react";
-import { FaHeart } from "react-icons/fa";
-import { FiMapPin } from "react-icons/fi";
 import { MdOutlineArrowForwardIos } from "react-icons/md";
-import { userDetailRoom } from "../assets/userDetailRoom";
-import { ownerPracticeRoom } from "../assets/OwnerPracticeRoom";
 import PracticeRoomDetailCard from "../Components/PracticeRoomDetailCard";
+import { getPracticeRoomLike, postPracticeRoomLike } from "../api/etc";
+import { useQuery } from "@tanstack/react-query";
+import IHeart from "../Components/icons/Iheart";
+import IFilledHeart from "../Components/icons/IfilledHeart";
+import IPin from "../Components/icons/Ipin";
+import {
+    getUserPracticeRoom,
+    getUserPracticeRoomDetailList,
+} from "../api/user";
+import Icalendar from "../Components/icons/Icalendar";
 
 const MainPracticeRoomContainer = styled.div`
     width: 100%;
@@ -107,37 +111,37 @@ const Title = styled.div`
         color: #7d7d7d;
         cursor: pointer;
     }
-`;
 
-// ✅ FaHeart에 스타일 적용
-const StyledFaHeart = styled(FaHeart)`
-    color: #ff4e4e;
-    margin-right: 6%;
-    width: 1rem;
-    height: 1rem;
-`;
-
-// ✅ CiHeart는 기본 색상 유지
-const StyledCiHeart = styled(CiHeart)`
-    color: #7d7d7d;
-    margin-right: 6%;
-    width: 1rem;
-    height: 1rem;
+    span {
+        margin-left: 0.5rem;
+    }
 `;
 
 const Address = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     color: #545454;
+    font-family: "Pretendard-ExtraLight";
 
     a {
+        width: 50%;
         display: flex;
         align-items: center;
         justify-content: start;
         gap: 2%;
         text-decoration: none;
-        font-family: "Pretendard-ExtraLight";
         letter-spacing: 2%;
         margin-right: 2%;
         color: #545454;
+    }
+
+    p {
+        display: flex;
+        justify-content: end;
+        align-items: center;
+        gap: 2%;
+        width: 50%;
     }
 `;
 
@@ -162,66 +166,99 @@ const MainPracticeRoom = () => {
     const { id } = useParams();
     const [query] = useSearchParams();
     const navigate = useNavigate();
-    const [toggleActive, setToggleActive] = useState(false);
-    console.log(`PracticeRoom Id : ${id}`);
-    console.log(`Date : ${query.get("date")}`);
 
-    return (
+    const { data: practiceRoom, isLoading: isLoadingPracticeRoom } = useQuery({
+        queryKey: ["practiceRoom", id],
+        queryFn: () => getUserPracticeRoom(id),
+    });
+
+    const {
+        data: likes,
+        isLoading: isLoadingLikes,
+        refetch,
+    } = useQuery({
+        queryKey: ["practiceRoomLikes", id],
+        queryFn: () => getPracticeRoomLike(id),
+    });
+
+    const { data: practiceRoomDetails, isLoading: isLoadingDetails } = useQuery(
+        {
+            queryKey: ["practiceRoomDetails", id],
+            queryFn: () =>
+                getUserPracticeRoomDetailList(id, 1, query.get("date")),
+        }
+    );
+
+    const handleLike = () => {
+        postPracticeRoomLike(id).then((res) => (res ? refetch() : null));
+    };
+
+    return isLoadingPracticeRoom ? null : (
         <MainPracticeRoomContainer>
-            <Banner bgphoto={ownerPracticeRoom.img}></Banner>
+            <Banner bgphoto={practiceRoom.image}></Banner>
             <BackBtn>
-                <IoIosArrowBack onClick={() => navigate(-1)} />
+                <IoIosArrowBack onClick={() => navigate("/")} />
             </BackBtn>
 
             <PracticeRoomContainer>
                 <TitleContainer>
                     <Title>
-                        <p>{ownerPracticeRoom.name}</p>
-                        <div onClick={() => setToggleActive(!toggleActive)}>
-                            {toggleActive ? (
-                                <StyledFaHeart />
-                            ) : (
-                                <StyledCiHeart />
-                            )}
-                            {/* TODO : 좋아요 기능 구현 */}
-                            <span>
-                                {ownerPracticeRoom.like > 100
-                                    ? "99+"
-                                    : ownerPracticeRoom.like}
-                            </span>
-                        </div>
+                        <p>{practiceRoom.name}</p>
+                        {!isLoadingLikes && (
+                            <div onClick={() => handleLike()}>
+                                {likes.find(
+                                    (like) =>
+                                        like == localStorage.getItem("userId")
+                                ) ? (
+                                    <IFilledHeart
+                                        width={"1rem"}
+                                        height={"1rem"}
+                                    />
+                                ) : (
+                                    <IHeart width={"1rem"} height={"1rem"} />
+                                )}
+                                <span>
+                                    {(likes?.length || 0) > 100
+                                        ? "99+"
+                                        : likes?.length || 0}
+                                </span>
+                            </div>
+                        )}
                     </Title>
                     <Address>
                         <a
                             href={`https://map.naver.com/p/search/${
-                                ownerPracticeRoom.region +
-                                " " +
-                                ownerPracticeRoom.address
+                                practiceRoom.region + " " + practiceRoom.address
                             }`}
                         >
-                            <FiMapPin />
-                            {ownerPracticeRoom.region +
-                                " " +
-                                ownerPracticeRoom.address}
+                            <IPin width={"1.2rem"} height={"1.2rem"} />
+                            {practiceRoom.region + " " + practiceRoom.address}
                             <MdOutlineArrowForwardIos />
                         </a>
+                        <p>
+                            {/* <Icalendar width="1rem" height="1rem" /> */}
+                            {query.get("date")}
+                        </p>
                     </Address>
                 </TitleContainer>
             </PracticeRoomContainer>
-            <CardContainer>
-                {userDetailRoom.map((el) => (
-                    <PracticeRoomDetailCard
-                        key={el.practiceRoomDetailId}
-                        img={el.image}
-                        time={el.reservedTimes}
-                        name={el.name}
-                        fee={el.fee}
-                        id={el.practiceRoomDetailId}
-                        date={query.get("date")}
-                        status={el.status}
-                    />
-                ))}
-            </CardContainer>
+            {!isLoadingDetails && (
+                <CardContainer>
+                    {practiceRoomDetails.map((el) => (
+                        <PracticeRoomDetailCard
+                            key={el.practiceRoomDetailId}
+                            img={el.image}
+                            time={el.availableTimeSlots}
+                            name={el.name}
+                            fee={el.fee}
+                            id={id}
+                            detailId={el.practiceRoomDetailId}
+                            date={query.get("date")}
+                            status={el.status}
+                        />
+                    ))}
+                </CardContainer>
+            )}
         </MainPracticeRoomContainer>
     );
 };

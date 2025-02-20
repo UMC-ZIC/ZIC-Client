@@ -1,6 +1,8 @@
 import styled from "styled-components";
 import { useState, useEffect, useRef } from "react";
-import { checkMobile } from "../utils/checkMobile";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 
 const Container = styled.div`
     width: 100%;
@@ -44,16 +46,84 @@ const Container = styled.div`
 `;
 
 const Loading = () => {
-    const [isMobile, setIsMobile] = useState(false);
     const pathRef1 = useRef(null);
     const pathRef2 = useRef(null);
     const pathRef3 = useRef(null);
+    const [query] = useSearchParams();
+    const navigate = useNavigate();
 
     useEffect(() => {
-        setIsMobile(checkMobile());
-    }, []);
+        if (query.get("jwtAccessToken")) {
+            // 로그인 처리 구현
+            const jwtAccessToken = query.get("jwtAccessToken");
+            const decodedToken = jwtDecode(jwtAccessToken);
+            const userId = decodedToken.userId;
+            const userName = decodedToken.userName;
+            const userType = decodedToken.userType;
+
+            console.log("받은 JWT 액세스 토큰:", jwtAccessToken);
+            console.log("받은 JWT 액세스 토큰:", userId);
+            console.log("받은 JWT 액세스 토큰:", userName);
+            console.log("받은 JWT 액세스 토큰:", userType);
+
+            // 로컬 스토리지 또는 쿠키에 저장
+            localStorage.setItem("accessToken", jwtAccessToken);
+            localStorage.setItem("userId", userId);
+            localStorage.setItem("userName", userName);
+            localStorage.setItem("userType", userType);
+
+            // 이후 필요한 페이지로 이동 (예: 홈 화면)
+            if (userType === "USER") {
+                window.location.href = "/";
+            }
+            if (userType === "PENDING") {
+                window.location.href = "/join/category/";
+            }
+            if (userType === "OWNER") {
+                window.location.href = "/owner/";
+            }
+        } else if (query.get("pg_token")) {
+            // 결제 토큰 처리
+            const storedData = JSON.parse(
+                window.sessionStorage.getItem("reservationData")
+            );
+            const body = {
+                reservationId: storedData.reservationId,
+                tid: storedData.tid,
+                partner_order_id: storedData.reservationNumber,
+                pg_token: query.get("pg_token"),
+            };
+
+            const option = {
+                url: `${
+                    import.meta.env.VITE_API_URL
+                }/api/reservation/payment/kakao/approve`,
+                method: "POST",
+                headers: {
+                    Authorization: localStorage.getItem("accessToken"),
+                    "Content-Type": "application/json",
+                },
+                data: body,
+            };
+
+            axios(option)
+                .then((res) => {
+                    res.data.isSuccess
+                        ? navigate(`/user/reservation?${storedData.date}`)
+                        : alert("예약 결제 처리 중 문제가 발생하였습니다.");
+                    navigate("/");
+                })
+                .catch((err) => console.error(err));
+        } else {
+            // TODO : 바꾸기
+            console.log("이 페이지에 대한 접근 권한이 없습니다.");
+            // alert("이 페이지에 대한 접근 권한이 없습니다.");
+            // navigate(-1);
+        }
+    }, [query]);
 
     useEffect(() => {
+        // ZIC 로고 애니메이션 담당
         if (pathRef1.current && pathRef2.current && pathRef3.current) {
             const length1 = pathRef1.current.getTotalLength();
             const length2 = pathRef2.current.getTotalLength();
@@ -74,8 +144,6 @@ const Loading = () => {
     // return <Container><p>ZIC</P></Container>;
     return (
         <Container>
-            <p>Loading</p>
-            <p>Mobile : {isMobile + ""}</p>
             <svg
                 width="105"
                 height="47"

@@ -1,10 +1,12 @@
 import styled from "styled-components";
-import { practiceRooms } from "../assets/PracticeRoom";
 import PracticeRoomCard from "../Components/PracticeRoomCard";
 import { regions, instruments } from "../assets/category";
 import Dropdown from "../Components/DropDown";
 import { useEffect, useState } from "react";
 import DateSelector from "../Components/DateSelector";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import moment from "moment";
 
 const Container = styled.div`
     width: 100%;
@@ -97,7 +99,9 @@ const Footer = styled.div`
 `;
 
 const Main = () => {
-    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [selectedDate, setSelectedDate] = useState(
+        moment().format("YYYY-MM-DD")
+    );
     const locationOptions = regions;
     const instrumentOptions = instruments;
     const priceOptions = ["저가순", "고가순"];
@@ -106,20 +110,64 @@ const Main = () => {
     const [instrument, setInstrument] = useState(null);
     const [price, setPrice] = useState(null);
 
+    const { data, isLoading } = useQuery({
+        queryKey: ["practiceRoom", location, instrument, price],
+        queryFn: () =>
+            getPracticeRoomList(
+                1,
+                100,
+                selectedDate,
+                location,
+                instrument,
+                price
+            ),
+        staleTime: 0,
+    });
+
     useEffect(() => {
-        if (location == null && instrument == null && price == null) {
-            return;
-        }
+        console.log(selectedDate);
         console.log({
             location,
             instrument,
             price,
         });
-    }, [location, instrument, price]);
+    }, [location, instrument, price, selectedDate]);
 
-    useEffect(() => {
-        console.log(selectedDate);
-    }, [selectedDate]);
+    const getPracticeRoomList = async (
+        page,
+        size,
+        date,
+        region,
+        instrument,
+        price
+    ) => {
+        try {
+            const params = new URLSearchParams();
+            params.append("page", page);
+            params.append("size", size);
+            params.append("date", date);
+            if (region && region != "전체") params.append("regionName", region);
+            if (instrument && instrument != "전체")
+                params.append("instrumentName", instrument);
+            if (price == "고가순") {
+                params.append("priceSort", "DESC");
+            } else {
+                params.append("priceSort", "ASC");
+            }
+
+            const response = await axios.get(
+                `${
+                    import.meta.env.VITE_API_URL
+                }/api/practice-rooms?${params.toString()}`
+            );
+
+            console.log(response);
+            return response.data.result.resultList;
+        } catch (error) {
+            console.log("API 호출 에러: ", error);
+            throw error;
+        }
+    };
 
     return (
         <Container>
@@ -129,11 +177,9 @@ const Main = () => {
                     showDate={true}
                     onChange={setSelectedDate}
                 />
-                {/* <CalendarComponent /> */}
                 <ParamContainer>
                     <DropDownContainer>
                         <DropDownWrapper>
-                            {/* 드롭 다운 디자인 수정하기 */}
                             <Dropdown
                                 label={"지역"}
                                 options={locationOptions}
@@ -155,14 +201,22 @@ const Main = () => {
                     </DropDownContainer>
                     <Banner src={"/assets/img/banner.png"} alt="banner" />
                 </ParamContainer>
+
                 <ListContainer>
-                    {practiceRooms.map((room) => (
-                        <PracticeRoomCard
-                            key={room.practiceRoomId}
-                            practiceRoom={room}
-                            selectedDate={selectedDate}
-                        />
-                    ))}
+                    {!isLoading && data && data.length > 0 ? ( //로딩X, data가 배열, null 이나 undefined X
+                        data.map((room) => (
+                            <PracticeRoomCard
+                                key={room.practiceRoomId}
+                                practiceRoom={room}
+                                selectedDate={selectedDate}
+                                totalCount={room.totalRoomCount}
+                                availableCount={room.availableRoomCount}
+                                price={10000}
+                            />
+                        ))
+                    ) : (
+                        <p>불러올 연습실 데이터가 없습니다.</p>
+                    )}
                 </ListContainer>
             </Wrapper>
             <Footer>

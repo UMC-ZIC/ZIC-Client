@@ -127,7 +127,16 @@ const Text = styled.div`
     }
 `;
 
-const PracticeRoomDetailCard = ({ img, time, name, fee, id, date, status }) => {
+const PracticeRoomDetailCard = ({
+    img,
+    id,
+    time,
+    name,
+    fee,
+    detailId,
+    date,
+    status,
+}) => {
     const navigate = useNavigate();
     const [availableTimes, setAvailableTimes] = useState([]);
 
@@ -160,7 +169,7 @@ const PracticeRoomDetailCard = ({ img, time, name, fee, id, date, status }) => {
                 onClick={() => {
                     status == "AVAILABLE"
                         ? navigate(
-                              `/user/practiceRoom/${id}/payment?date=${date}`
+                              `/user/practiceRoom/${id}/payment/${detailId}?date=${date}`
                           )
                         : alert("현재 이 방은 이용가능 상태가 아닙니다.");
                 }}

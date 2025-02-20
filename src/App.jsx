@@ -16,6 +16,11 @@ import JoinHeader from "./Components/JoinHeader";
 import MainHeader from "./Components/MainHeader";
 import Loading from "./pages/Loading";
 import OwnerPracticeRoom from "./pages/Owner/OwnerPracticeRoom";
+import OnlyAdmin from "./router/OnlyOwner";
+import OnlyUser from "./router/OnlyUser";
+import BlockAdmin from "./router/BlockAdmin";
+import OnlyPending from "./router/OnlyPending";
+import OnlyNotLogin from "./router/OnlyNotLogin";
 
 const JoinRoutes = () => {
     return (
@@ -36,9 +41,12 @@ const UserRoutes = () => {
     return (
         <Routes>
             {/* 결제 페이지 */}
-            <Route path="/practiceRoom/:id/payment" element={<UserPayment />} />
+            <Route
+                path="/practiceRoom/:practiceRoomId/payment/:practiceRoomDetailId"
+                element={<UserPayment />}
+            />
             {/* 예약 결제 콜백 페이지 */}
-            <Route path="/payment/loading" element={<Loading />} />
+            <Route path="/reservation/payment/loading" element={<Loading />} />
             <Route element={<MainHeader />}>
                 {/* 예약 내역 페이지 */}
                 <Route path="/reservation" element={<UserReservation />} />
@@ -80,27 +88,40 @@ function App() {
             <Routes>
                 <Route element={<RootContainer />}>
                     {/* 메인 페이지 */}
-                    <Route element={<MainHeader />}>
-                        <Route path="/" element={<Main />} />
+                    <Route element={<BlockAdmin />}>
+                        <Route element={<MainHeader />}>
+                            <Route path="/" element={<Main />} />
+                        </Route>
+                        {/* 연습실 내부 방 페이지 */}
+                        <Route
+                            path="/practiceRoom/:id"
+                            element={<MainPracticeRoom />}
+                        />
                     </Route>
-                    {/* 연습실 내부 방 페이지 */}
-                    <Route
-                        path="/practiceRoom/:id"
-                        element={<MainPracticeRoom />}
-                    />
 
                     {/* 로그인 */}
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/login/loading" element={<Loading />} />
+                    <Route element={<OnlyNotLogin />}>
+                        <Route path="/login" element={<Login />} />
+                        <Route
+                            path="/login/oauth/loading"
+                            element={<Loading />}
+                        />
+                    </Route>
 
                     {/* 회원가입 */}
+                    {/* <Route element={<OnlyPending />}> */}
                     <Route path="/join/*" element={<JoinRoutes />} />
+                    {/* </Route> */}
 
                     {/* 유저 */}
-                    <Route path="/user/*" element={<UserRoutes />} />
+                    <Route element={<OnlyUser />}>
+                        <Route path="/user/*" element={<UserRoutes />} />
+                    </Route>
 
                     {/* 대여자 */}
-                    <Route path="/owner/*" element={<OwnerRoutes />} />
+                    <Route element={<OnlyAdmin />}>
+                        <Route path="/owner/*" element={<OwnerRoutes />} />
+                    </Route>
                 </Route>
             </Routes>
         </BrowserRouter>
