@@ -1,4 +1,5 @@
 export const regions = [
+    "서울",
     "부산",
     "충북",
     "충남",
@@ -14,7 +15,6 @@ export const regions = [
     "전남",
     "전북",
     "세종",
-    "서울",
     "울산",
 ];
 

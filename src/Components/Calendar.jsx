@@ -18,12 +18,17 @@ const CalendarComponent = ({ role, onDateSelect }) => {
     const tileClassName = ({ date, view }) => {
         // view가 "month"일 때만 적용
         if (view === "month") {
-            // 날짜가 일요일(0) 또는 토요일(6)일 경우 빨간색
-            if (date.getDay() === 0 || date.getDay() === 6) {
-                return "red-day"; // "red-day" 클래스를 반환
+            const day = date.getDay();
+            if (day === 0) {
+                return "red-day"; // 일요일
+            } else if (day === 6) {
+                return "blue-day"; // 토요일
+            }
+            else {
+                return "black-day"; // 평일 (월~금)
             }
         }
-        return "";
+         return "";
     };
 
     const blueDot = ({date, view}) => {

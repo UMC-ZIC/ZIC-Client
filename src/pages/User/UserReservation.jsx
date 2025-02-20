@@ -73,7 +73,7 @@ const UserReservation = () => {
 
         axios(option)
             .then((res) => {
-                console.log("예약 취소 성공", res.data);
+                alert("예약 취소 성공", res.data);
             })
             .catch((err) => console.error("예약 취소 실패", err.response.data));
     }
@@ -127,6 +127,11 @@ const UserReservation = () => {
                 {reservations?.resultList?.length > 0 ? (
                     reservations.resultList.map((el) => {
                         const reservationStatus = el.reservationResult.status; // 예약 상태 가져오기
+                        const reservationEndTime = moment(`${el.reservationResult.date} ${el.reservationResult.endTime}`, "YYYY-MM-DD HH:mm"); // 예약 종료 시간
+                        const now = moment(); // 현재 시간
+
+                        // 종료된 예약 여부 확인
+                        const isPastReservation = reservationEndTime.isBefore(now);
 
                         return (
                             <ReservationCard
@@ -138,7 +143,12 @@ const UserReservation = () => {
                                 startTime={el.reservationResult.startTime ?? "시작 시간 없음"}
                                 endTime={el.reservationResult.endTime ?? "종료 시간 없음"}
                                 onClick={() => {
-                                    if (reservationStatus === SUCCESS) {
+                                    if (isPastReservation) {
+                                        alert("이미 종료된 예약은 취소할 수 없습니다.");
+                                        return;
+                                    }
+
+                                    if (reservationStatus === 'SUCCESS') {
                                         axiosReservationCancle(
                                             el.reservationResult.id,
                                             el.reservationDetailResult.tid,

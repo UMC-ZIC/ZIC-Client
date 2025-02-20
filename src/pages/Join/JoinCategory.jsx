@@ -2,7 +2,7 @@ import styled from "styled-components";
 import Button from "../../Components/Button";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { JoinContainer } from "../../styles/container";
+import {JoinContainer} from "../../styles/container";
 import Calendar from "../../Components/Calendar"
 
 const Wrapper = styled.div`

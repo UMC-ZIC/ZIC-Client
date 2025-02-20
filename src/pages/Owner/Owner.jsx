@@ -1,10 +1,10 @@
-import CalendarComponent from "../../Components/Calendar";
 import styled from "styled-components";
 import ReservationCard from "../../Components/ReservationCard";
 import moment from "moment";
 import { useState, useEffect } from "react";
 import { checkMobile } from "../../utils/checkMobile";
-import ReactCalendar from "../../Components/Calendar";
+import CalendarComponent from "../../Components/Calendar";
+import axios from "axios";
 
 const Container = styled.div.attrs((props) => ({
     ismobile: undefined,
@@ -39,56 +39,71 @@ const ReservationLabel = styled.p`
     margin-bottom: 3%;
 `;
 
-const Owner = ({ reservations = { result: { resultList: [] } } }) => {
-    const [selectedDate, setSelectedDate] = useState(
-        moment().format("YYYY-MM-DD")
-    );
+const Owner = () => {
+    const [selectedDate, setSelectedDate] = useState(moment().format("YYYY-MM-DD")); //선택한 날짜 (하단에 예약 내역을 표시할 때 사용)
+    const [reservations, setReservations] = useState({ resultList: [] }); //선택한 날짜의 예약 내역
     const isMobile = checkMobile();
 
-    // 날짜 선택 시 처리 함수
-    const handleDateSelect = (date, reservationData) => {
-        const formattedDate = moment(date).format("YYYY-MM-DD"); // 날짜 포맷
-        setSelectedDate(formattedDate); // 상태에 저장
-        console.log("selectedDate 안녕 : " + selectedDate);
+    const handleDateSelect = async (date) => {
+        console.log("handleDateSelect 실행됨! 선택된 날짜:", date);
+        setSelectedDate(moment(date).format("YYYY-MM-DD"));
     };
 
     useEffect(() => {
-        // console.log(selectedDate);
-        console.log(reservations);
-    }, [selectedDate, reservations]);
+        const fetchReservations = async () => {
+            try {
+                const response = await axios.get(
+                    `${import.meta.env.VITE_API_URL}/api/reservation/owner?date=${selectedDate}&page=1`,
+                   {
+                        headers: {
+                            Authorization: `eyJ0eXBlIjoiYWNjZXNzVG9rZW4iLCJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjIsInVzZXJUeXBlIjoiT1dORVIiLCJ1c2VyTmFtZSI6Ik93bmVyVGVzdCIsImlhdCI6MTczOTg1NjU5NywiZXhwIjoxNzM5OTQyOTk3fQ.2FBl4QlMDhc0FfCYqx9W-bLJzQ1IKJU3XP6WQjwioiE`
+                        }
+                    }
+                );
+    
+                 if (!response.data.isSuccess) {
+                    console.error("API 오류: ", response.data.result);
+                    return;
+                }
+    
+                setReservations(response.data.result);
+    
+            } catch (error) {
+                console.error("예약 내역 불러오기 실패! : ", error);
+            }
+        };
 
+        fetchReservations();
+    }, [selectedDate]);
 
-    // 예약 내역이 존재하는지 확인하고, 그에 맞게 렌더링
-    const resultList = reservations.result?.resultList || [];
+    useEffect(() => {
+        console.log("RES 데이터 업데이트됨:", JSON.stringify(reservations, null, 1));
+    }, [reservations]);
 
     // API로 대여자 예약 내역 조회 구현
     return (
         <Container ismobile={isMobile}>
             <CalendarWrapper>
-                <ReactCalendar/>
+                <CalendarComponent role="owner" onDateSelect={handleDateSelect}/>
             </CalendarWrapper>
 
             <ReservationWrapper>
                 <ReservationLabel>예약 내역</ReservationLabel>
-                {reservations.result.resultList.map((el) => (
-                    <ReservationCard
-                        key={el.reservationResult.id} // 고유 키 추가
-                        img={
-                            el.reservationResult.practiceRoomDetail
-                                .practiceRoomDetailImage
-                        }
-                        roomName={
-                            el.reservationResult.practiceRoom.PracticeRoomName
-                        }
-                        detailName={
-                            el.reservationResult.practiceRoomDetail
-                                .practiceRoomDetailName
-                        }
-                        date={el.reservationResult.date}
-                        startTime={el.reservationResult.startTime}
-                        endTime={el.reservationResult.endTime}
-                    />
-                ))}
+                {reservations?.resultList?.length > 0 ? (
+                    reservations.resultList.map((el) => (
+                        <ReservationCard
+                            key={el.id}
+                            img={el.practiceRoomDetail.practiceRoomDetailImage}
+                            roomName={el.practiceRoom.PracticeRoomName}
+                            detailName={el.practiceRoomDetail.practiceRoomDetailName}
+                            date={el.date}
+                            startTime={el.startTime}
+                            endTime={el.endTime}
+                        />
+                    ))
+                ) : (
+                    <p>예약 내역이 없습니다.</p>
+                )}
             </ReservationWrapper>
         </Container>
     );

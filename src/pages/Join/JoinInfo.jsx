@@ -152,7 +152,7 @@ const JoinInfo = () => {
                     <InputWrapper>
                         <input
                             type="text"
-                            placeholder="도로명, 지번, 건물명 검색"
+                            placeholder="시/도 단위 검색"
                             value={region}
                             onChange={(e) => setRegion(e.target.value)}
                         />
@@ -200,7 +200,7 @@ const JoinInfo = () => {
                     <InputWrapper>
                         <input
                             type="text"
-                            placeholder="도로명, 지번, 건물명 검색"
+                            placeholder="시/도 단위 검색"
                             value={region}
                             onChange={(e) => setRegion(e.target.value)}
                         />
