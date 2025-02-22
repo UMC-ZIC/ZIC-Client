@@ -260,7 +260,7 @@ const JoinInfo = () => {
             {role.role == "user" ? (
                 <InputContainer>
                     <InputLabel isActive={region != ""}>지역</InputLabel>
-                    {/* <InputWrapper>
+                    <InputWrapper>
                         <input
                             type="text"
                             placeholder="시/도 단위 검색"
@@ -270,7 +270,7 @@ const JoinInfo = () => {
                         <IoIosSearch
                             onClick={() => setRegionToggle(!regionToggle)}
                         />
-                    </InputWrapper> */}
+                    </InputWrapper>
                     <RegionCategory>
                         {regions
                             .filter((el) => el !== "전체")
